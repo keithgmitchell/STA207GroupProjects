@@ -1,0 +1,150 @@
+---
+title: "Project 2 Post Exploration"
+author: "Keith Mitchell"
+date: "2/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(plotrix)
+
+```
+
+## TODO manage outliers and test with training and non training set. (other code from 206 for comparing STEP aic number of variable to be chosen max)
+
+```{r}
+fatalities = read_csv('post_EDA.csv')
+```
+## Lets explore predictors (that make sense) and are interpretable for overall fatalities
+- We will call this the general model
+```{r}
+drops <- c("nfatal","sfatal", "afatal", "state", "X1","frate")
+fatalities_gen = fatalities[,!grepl("1517", colnames(fatalities))]
+fatalities_gen = fatalities_gen[,!grepl("1820", colnames(fatalities_gen))]
+fatalities_gen = fatalities_gen[,!grepl("2124", colnames(fatalities_gen))]
+fatalities_gen = fatalities_gen[,!grepl("2124", colnames(fatalities_gen))]
+fatalities_gen = fatalities_gen[, !(names(fatalities_gen) %in% drops)]
+
+
+colnames(fatalities_gen)
+fatalities_gen
+fatalities_gen <- na.omit(fatalities_gen)
+fatalities_gen
+```
+
+```{r}
+null = lm(fatal ~ 1, data=fatalities_gen)
+full = lm(fatal ~ ., data=fatalities_gen)
+step.f<-stepAIC(null, scope = list(lower=null,upper=full), direction = 'forward', trace=FALSE)
+summary(step.f)
+datatable(confint.default(step.f)[-c(1),])
+par(mfrow=c(2,2))
+plot(step.f)
+```
+```{r}
+ci = confint.default(step.f)
+
+df <- data.frame(x =rownames(ci[-c(1),]),
+                 F =step.f$coefficients[-c(1)],
+                 L =confint.default(step.f)[-c(1),][,1],
+                 U =confint.default(step.f)[-c(1),][,2])
+ggplot(df, aes(x = x, y = F)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymax = U, ymin = L))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+
+## Lets explore predictors (that make sense) and are interpretable for alcohol fatalities
+- We will call this the alcohol fatalities model
+
+```{r}
+drops <- c("nfatal","sfatal", "fatal", "state", "X1", "frate")
+fatalities_a = fatalities[,!grepl("1517", colnames(fatalities))]
+fatalities_a = fatalities_a[,!grepl("1820", colnames(fatalities_a))]
+fatalities_a = fatalities_a[,!grepl("2124", colnames(fatalities_a))]
+fatalities_a = fatalities_a[,!grepl("2124", colnames(fatalities_a))]
+fatalities_a = fatalities_a[, !(names(fatalities_a) %in% drops)]
+
+colnames(fatalities_a)
+fatalities_a
+fatalities_a <- na.omit(fatalities_a)
+fatalities_a
+```
+
+```{r}
+null = lm(afatal ~ 1, data=fatalities_a)
+full = lm(afatal ~ ., data=fatalities_a)
+step.f<-stepAIC(null, scope = list(lower=null,upper=full), direction = 'forward', trace=FALSE)
+summary(step.f)
+datatable(confint.default(step.f))
+par(mfrow=c(2,2))
+plot(step.f)
+
+```
+
+
+```{r}
+ci = confint.default(step.f)
+
+df <- data.frame(x =rownames(ci[-c(1),]),
+                 F =step.f$coefficients[-c(1)],
+                 L =confint.default(step.f)[-c(1),][,1],
+                 U =confint.default(step.f)[-c(1),][,2])
+ggplot(df, aes(x = x, y = F)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymax = U, ymin = L))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+
+
+## Lets explore predictors (that make sense) and are interpretable for frate
+- We will call this the alcohol fatalities model
+- TODO should we do frate for the afatal only??
+- TODO outliers need to be managed.
+```{r}
+drops <- c("nfatal","sfatal", "afatal", "state", "X1","fatal")
+fatalities_rate = fatalities[,!grepl("1517", colnames(fatalities))]
+fatalities_rate = fatalities_rate[,!grepl("1820", colnames(fatalities_rate))]
+fatalities_rate = fatalities_rate[,!grepl("2124", colnames(fatalities_rate))]
+fatalities_rate = fatalities_rate[,!grepl("2124", colnames(fatalities_rate))]
+fatalities_rate = fatalities_rate[, !(names(fatalities_rate) %in% drops)]
+
+
+colnames(fatalities_rate)
+fatalities_rate
+fatalities_rate <- na.omit(fatalities_rate)
+fatalities_rate
+```
+
+```{r}
+null = lm(frate ~ 1, data=fatalities_rate)
+full = lm(frate ~ ., data=fatalities_rate)
+step.f<-stepAIC(null, scope = list(lower=null,upper=full), direction = 'forward', trace=FALSE)
+summary(step.f)
+datatable(confint.default(step.f)[-c(1),])
+par(mfrow=c(2,2))
+plot(step.f)
+```
+
+```{r}
+ci = confint.default(step.f)
+
+df <- data.frame(x =rownames(ci[-c(1),]),
+                 F =step.f$coefficients[-c(1)],
+                 L =confint.default(step.f)[-c(1),][,1],
+                 U =confint.default(step.f)[-c(1),][,2])
+ggplot(df, aes(x = x, y = F)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymax = U, ymin = L))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```

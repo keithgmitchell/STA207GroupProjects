@@ -22,7 +22,11 @@ data('Fatalities')
 library(tidyverse)
 library(lubridate)
 library(timetk)
-
+library(kableExtra)
+library(devtools)
+library(gtsummary)
+library(plotly)
+library(DT)
 ```
 
 
@@ -137,6 +141,9 @@ ggplot(Fatalities, aes(x=drinkage, y=fatal)) +
 We also investigate the relationship between the number of fatalities and the minimum legal drinking age. Since the minimum drinking ages are not necessarily whole numbers, we round them to the nearest integer. From the twp-way box plot above, we can observe that the states with legal minimum drinking ages 18 and 21 are associated with the largest average number of fatalities, and that the states with minimum legal drinking age 20 seems has the smallest average number of fatalities. We also noticed that the data points of minimum drinking age 21 disperse widely.   
 
 ```{r}
+test <- Fatalities %>% select(drinkage, miles, income, unemp, fatal)
+test %>% tbl_summary(by=drinkage, statistic = list(all_continuous() ~ "{mean} ({sd}, {median}, {IQR})")) %>% add_p()
+
 summary(Fatalities$miles)
 plot(Fatalities$milestot, Fatalities$fatal, xlab = 'Total vechicle miles', ylab = 'The number of fatalities' )
 ```
@@ -177,3 +184,10 @@ boxplot(Fatalities$fatal~Fatalities$unem_cat, xlab = 'Quantile of unemployment r
 ```
 
 We use quantiles to reclassify unemployment rate, and plot two-way box plot between unemployment rate and the number of fatalities, we can observe that the third and the first quantiles have the lowest average numbers of fatalities.
+
+
+
+
+```{r}
+write.csv(Fatalities, 'post_EDA.csv')
+```
