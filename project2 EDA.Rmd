@@ -1,0 +1,179 @@
+---
+title: "Project 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(AER)
+data('Fatalities')
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(timetk)
+
+```
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+ggplot(data = Fatalities, aes(x = year, y = fatal, group = state, colour = state)) +
+    geom_line()
+```
+
+```{r}
+data1 = Fatalities[1:112, ]
+data2 = Fatalities[113:224, ]
+data3 = Fatalities[225:336, ]
+ggplot(data = data1, aes(x = year, y = fatal, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+ggplot(data = data2, aes(x = year, y = fatal, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+
+ggplot(data = data3, aes(x = year, y = fatal, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+```
+
+We first make the time series plots for the number of fatalities of each state from 1982 to 1988. From the plots above, we can find that the numbers of fatalities vary a lot, making it difficult to identify if there is any pattern. Therefore, we try to use the ratio of the number of fatalities over the population of the state, and make the time series plots for each state again. From the plots below, we can observe that there are certain states show similar patterns. Therefore, we want to understand what the factors in this data set affect the change of the number of fatalities are. 
+
+```{r}
+##Time series plots using the ratio of the total number of fatalities over the population of the state
+Fatalities$frate = Fatalities$fatal/Fatalities$pop
+data4 = Fatalities[1:112, ]
+data5 = Fatalities[113:224, ]
+data6 = Fatalities[225:336, ]
+ggplot(data = data4, aes(x = year, y = frate, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+ggplot(data = data5, aes(x = year, y = frate, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+
+ggplot(data = data6, aes(x = year, y = frate, group = state, colour = state)) +
+    geom_line() +
+    facet_wrap(~ state) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90), panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank())
+```
+
+
+
+
+
+```{r}
+jail_yes = subset(Fatalities, jail == 'yes') 
+jail_no = subset(Fatalities, jail == 'no') 
+hist(jail_no$fatal, main = 'Histogram of the number of fatalities without mandatory jail sentence')
+hist(jail_yes$fatal,  main = 'Histogram of the number of fatalities with mandatory jail sentence')
+mean(jail_no$fatal)
+mean(jail_yes$fatal)
+```
+
+We are interested to know  if the mandatory jail sentence for the traffic fatalities has any relationship with the number of fatalities. From the histogram of the number of fatalities with mandatory jail sentence and that without, we find that the the number of fatalities with mandatory jail sentence is smaller than that without jail sentence. 
+
+
+```{r}
+hist(jail_no$frate, main = 'Histogram of the number of fatalities without mandatory jail sentence')
+hist(jail_yes$frate,  main = 'Histogram of the number of fatalities with mandatory jail sentence')
+```
+
+However, because the populations of different states vary, we also use the ratio of the total number of fatalities over the population of the state to plot histograms again, and we find that the ratio in the histogram of mandatory jail sentence is larger than that that in the histogram without jail sentence. So, the population of each state may be affecting our analysis. 
+
+
+```{r}
+Fatalities$drinkage = round(Fatalities$drinkage)
+Fatalities$drinkage = as.factor(Fatalities$drinkage)
+```
+
+```{r}
+ggplot(Fatalities, aes(x=drinkage, y=fatal)) + 
+  geom_boxplot(outlier.shape=NA) + #avoid plotting outliers twice
+  geom_jitter(position=position_jitter(width=.1, height=0))
+```
+
+We also investigate the relationship between the number of fatalities and the minimum legal drinking age. Since the minimum drinking ages are not necessarily whole numbers, we round them to the nearest integer. From the twp-way box plot above, we can observe that the states with legal minimum drinking ages 18 and 21 are associated with the largest average number of fatalities, and that the states with minimum legal drinking age 20 seems has the smallest average number of fatalities. We also noticed that the data points of minimum drinking age 21 disperse widely.   
+
+```{r}
+summary(Fatalities$miles)
+plot(Fatalities$milestot, Fatalities$fatal, xlab = 'Total vechicle miles', ylab = 'The number of fatalities' )
+```
+
+From the plot above, we can find that the there is a linear relationship between the number of fatalities and total vehicle miles. 
+
+
+```{r}
+plot(Fatalities$income, Fatalities$fatal, xlab = 'income', ylab = 'Number of fatalities')
+plot(Fatalities$income, Fatalities$frate, xlab = 'income', ylab = 'Fatality ratio')
+```
+
+From the plots above, we can not find any relationship between the number of fatalities and income. However, if we use the ratio of the total number of fatalities over the population of the state, we can find there is a quadratic pattern between income and the ratio.
+```{r}
+summary(Fatalities$income)
+```
+
+
+```{r}
+Fatalities$inc_cat = ifelse(Fatalities$income <= 12086, '1st',ifelse(Fatalities$income > 12086 & Fatalities$income <=13763, '2nd',ifelse(Fatalities$income >13763 & Fatalities$income <=15175, '3rd', '4th')))
+```
+
+```{r}
+boxplot(Fatalities$fatal~Fatalities$inc_cat, xlab = 'Quantile of income', ylab = 'Number of fatal')
+```
+
+We use quantiles to reclassify income, and plot the two-way box plot between income and the number of fatalities. We can observe that the third and fourth quantiles of incomes have higher average numbers of fatalities.
+```{r}
+summary(Fatalities$unemp)
+```
+
+```{r}
+Fatalities$unem_cat = ifelse(Fatalities$unemp <= 5.475, '1st',ifelse(Fatalities$unemp > 5.475  & Fatalities$unemp <=7.000, '2nd',ifelse(Fatalities$unemp >7.000 & Fatalities$unemp <=8.900, '3rd', '4th')))
+```
+
+```{r}
+boxplot(Fatalities$fatal~Fatalities$unem_cat, xlab = 'Quantile of unemployment rate', ylab = 'Number of fatal')
+```
+
+We use quantiles to reclassify unemployment rate, and plot two-way box plot between unemployment rate and the number of fatalities, we can observe that the third and the first quantiles have the lowest average numbers of fatalities.
