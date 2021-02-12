@@ -34,6 +34,9 @@ Observe the row(s) containing NA value in "jail" and/or "service".
 One row (row #28) has NA in the two variables.
 ```{r}
 Fatalities[which(is.na(Fatalities$jail) | is.na(Fatalities$service)), ]
+
+
+Fatalities <- Fatalities[-28, ]
 ```
 
 
@@ -132,6 +135,7 @@ Independent variables chosen based on the degree of correlation with "frate"
 Model 1 (treatment (jail = yes) and control (jail = no))
 
 ```{r}
+Fatalities$jail = relevel(Fatalities$jail, ref="no")
 mod1 = glm(jail ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles),
            family="binomial", data=Fatalities)
 summary(mod1)
@@ -141,7 +145,7 @@ pscore1 = ifelse(Fatalities$jail == "yes", prob1,(1-prob1))
 weight1 = 1/pscore1
 
 mod1_new = lmer(frate~jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+
-                  rescale(miles)+(1|year),data=Fatalities, weights=weight1)
+                  rescale(miles)+(1|state),data=Fatalities, weights=weight1)
 
 summary(mod1_new)
 ```
@@ -179,7 +183,7 @@ prob3 = mod3$fitted.values
 pscore3 = ifelse(Fatalities$service == "yes", prob3,(1-prob3))
 weight3 = 1/pscore3
 mod3_new = lmer(frate~service+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+
-                  rescale(miles)+(1|year),data=Fatalities, weights=weight3)
+                  rescale(miles)+(1|state),data=Fatalities, weights=weight3)
 summary(mod3_new)
 ```
 
