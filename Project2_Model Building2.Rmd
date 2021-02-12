@@ -1,0 +1,389 @@
+---
+title: "Project 2"
+author: "Seyoung Jung"
+date: "2/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r,warning=FALSE,message=FALSE}
+library(AER)
+library(tidyverse)
+library(lubridate)
+library(lmerTest)
+library(scales)
+library(kableExtra)
+```
+
+
+```{r}
+data('Fatalities')
+```
+
+
+```{r}
+summary(Fatalities)
+```
+
+Observe the row(s) containing NA value in "jail" and/or "service".
+One row (row #28) has NA in the two variables.
+```{r}
+Fatalities[which(is.na(Fatalities$jail) | is.na(Fatalities$service)), ]
+```
+
+
+Observe the row which has the maximum value from the "miles" variable
+Notice the stark difference between the highest and the second highest average miles per driver 
+```{r}
+Fatalities[order(-Fatalities$miles), ] %>% head(5)
+
+plot(Fatalities$miles[-171], Fatalities$fatal[-171], xlab = 'Average miles per driver', ylab = 'The number of fatalities' )
+
+plot(Fatalities$miles[-171], Fatalities$frate[-171], xlab = 'Average miles per driver', ylab = 'Fatality rate' )
+```
+
+
+Check whether the other rows of California have data on "jail" and "service".
+The other rows have "no"s in the jail and service columns. 
+```{r}
+Fatalities[which(Fatalities$state=="ca"), ]
+```
+
+
+Convert the "state", "year", "drinkage" into a factor variable
+```{r}
+Fatalities$drinkage = round(Fatalities$drinkage)
+Fatalities$drinkage = as.factor(Fatalities$drinkage)
+```
+
+
+Correlation between "fatal" and the other non-categorical variables
+```{r}
+cor(Fatalities$fatal, Fatalities[, -which(sapply(Fatalities, class)=="factor")])
+```
+
+
+Create a new variable "frate" which is the total number of fatalities over the population of the state. 
+Correlation between "frate" and the other non-categorical variables
+Some variables (e.g. income, beertax, baptist, miles, and youngdrivers) have relatively high correlations with "frate".
+```{r}
+Fatalities$frate = Fatalities$fatal/Fatalities$pop
+
+cor(Fatalities$frate, Fatalities[, -which(sapply(Fatalities, class)=="factor")])
+```
+
+
+
+
+
+
+
+
+```{r}
+#summary(glm(breath~frate,data=Fatalities,family=binomial))$coefficients # breath vs. frate
+#summary(glm(jail~frate,data=Fatalities,family=binomial))$coefficients # jail vs. frate
+#summary(glm(service~frate,data=Fatalities,family=binomial))$coefficients # service vs. frate
+
+#summary(glm(breath~unemp,data=Fatalities,family=binomial))$coefficients # breath vs. unemp
+#summary(glm(jail~unemp,data=Fatalities,family=binomial))$coefficients # jail vs. unemp
+#summary(glm(service~unemp,data=Fatalities,family=binomial))$coefficients # service vs. unemp
+
+#summary(glm(breath~miles,data=Fatalities,family=binomial))$coefficients # breath vs. miles
+#summary(glm(jail~miles,data=Fatalities,family=binomial))$coefficients # jail vs. miles
+#summary(glm(service~miles,data=Fatalities,family=binomial))$coefficients # service vs. miles
+
+#summary(glm(breath~youngdrivers,data=Fatalities,family=binomial))$coefficients # breath vs. youngdrivers
+#summary(glm(jail~youngdrivers,data=Fatalities,family=binomial))$coefficients # jail vs. youngdrivers
+#summary(glm(service~youngdrivers,data=Fatalities,family=binomial))$coefficients # service vs. youngdrivers
+
+#summary(glm(breath~beertax,data=Fatalities,family=binomial))$coefficients # breath vs. beertax
+#summary(glm(jail~beertax,data=Fatalities,family=binomial))$coefficients # jail vs. beertax
+#summary(glm(service~beertax,data=Fatalities,family=binomial))$coefficients # service vs. beertax
+
+#summary(glm(breath~income,data=Fatalities,family=binomial))$coefficients # breath vs. income
+#summary(glm(jail~income,data=Fatalities,family=binomial))$coefficients # jail vs. income
+#summary(glm(service~income,data=Fatalities,family=binomial))$coefficients # service vs. income
+```
+
+
+```{r}
+# explore  relationships between jail and unemployment
+ggplot(data=Fatalities, aes(unemp, fill = jail)) + 
+          geom_density( alpha = 0.5 )
+```
+unemployment does not seem to strongly impact the propensity of being assigned to treatment (jail = yes) or control (jail = no) group.
+
+```{r}
+# explore relationships between jail and income
+ggplot(data=Fatalities, aes(income, fill = jail)) + 
+          geom_density( alpha = 0.5 )
+
+```
+It seems that income impacts the propensity of being assigned to treatment (jail = yes) or control (jail = no) group. Therefore income should be included in the selection model.
+
+```{r}
+# explore relationships between jail and fatalities
+ggplot(data=Fatalities, aes(miles, fill = jail)) + 
+          geom_density( alpha = 0.5 )
+
+```
+mileage driven per person does not seem to strongly impact the propensity of being assigned to treatment (jail = yes) or control (jail = no) group.
+
+```{r}
+# explore relationships between jail and beertax
+ggplot(data=Fatalities, aes(beertax, fill = jail)) + 
+          geom_density( alpha = 0.5 )
+```
+
+beertax does not seem to strongly impact the propensity of being assigned to treatment (jail = yes) or control (jail = no) group.
+
+```{r}
+# explore relationships between jail and youngdrivers
+ggplot(data=Fatalities, aes(youngdrivers, fill = jail)) + 
+          geom_density( alpha = 0.5 )
+```
+
+percent of young drivers does not seem to strongly impact the propensity of being assigned to treatment (jail = yes) or control (jail = no) group.
+
+```{r}
+# Adpated from http://www.sthda.com/english/wiki/scatter-plot-matrices-r-base-graphs
+my_cols <- c("#00AFBB", "#FC4E07")  
+
+# Correlation panel
+panel.cor <- function(x, y){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- cor(x, y)
+    txt <- paste0("r = ", round(r, digits = 2))
+    text(0.5, 0.5, txt, cex = 3*abs(r) )
+}
+
+# Customize upper panel
+upper.panel<-function(x, y){
+  points(x,y, pch = 19, col = alpha( my_cols[Fatalities$jail], 0.3 ) )
+}
+
+```
+
+```{r}
+pairs( Fatalities[, c('income', 'unemp', 'miles', 'beertax', 'youngdrivers') ],
+       upper.panel = upper.panel,
+       lower.panel = panel.cor )
+```
+
+
+
+==========================================================================================
+                              Model Building (Seyoung Jung)
+==========================================================================================
+
+```{r}
+ cor(Fatalities$frate, Fatalities[, -which(sapply(Fatalities, class)=="factor")])  
+
+
+```
+Independent variables chosen based on the degree of correlation with "frate"
+
+We start by building a tentative outcome model without the use of propensity scores.
+
+## Model 1 (treatment (jail = yes) and control (jail = no))
+
+```{r warning=FALSE}
+
+summary( lmer(frate ~ jail + rescale(unemp) + rescale(income) + rescale(beertax) + rescale(youngdrivers) +  rescale(miles) + (1|state), data=Fatalities) )$coef %>% round(.,3) %>%  kable() %>% kable_styling()
+
+```
+
+We found a non-significant treatment effect, as the factor level jailyes is not statistically significant at p = 0.05. However, the covariates `unemp` and `youngdrivers` are statistically significant at p < 0.001.
+
+Based on our exploratory data analysis and group discussion, we assume that the variables `unemp`, `income`, `beertax`, `youngdrivers` and `miles` have an influence on the assignment to either the control (jail = no) or the treatment (jail = yes) group.
+
+Next we performed a balance analysis, trying to assess the degree of bias during assignment to treatment and control groups, before the use of propensity scores.
+
+```{r}
+# balance analysis before estimating propensity scores
+summary( lm(miles ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
+summary( lm(income ~ jail, data = Fatalities) ) $coefficients %>% round(., 2)%>% kable() %>% kable_styling()
+summary( lm(beertax ~ jail, data = Fatalities) )$coefficients %>% round(., 2)%>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
+```
+
+Although covariates `beertax`, `youngdrives`, and `miles` do not show imbalance between treatment (jail = yes) and control (jail = no ) groups, covariates `income` and `unemp` shows noticeable imbalance (p < 0.01 for both), and therefore entails balance adjustments as they will lead to selection bias if unattended.
+
+
+
+
+
+```{r}
+mod1 = glm(jail ~ unemp + income + beertax + youngdrivers + miles,
+           family="binomial", data=Fatalities)
+summary(mod1)$coef %>% round(., 3) %>% kable() %>% kable_styling()
+```
+As expected from descriptive analysis, we found that covariate `income` significantly impact the assignment to treatment or control group at p < 0.05. Note that the significance level of `unemp` does not reach p = 0.1, probably due to its strong negative correlation with `income` (r = -0.55) and therefore does not contribute more information when `income` is included in the model. We decide to keep all 5 variables in the selection model regardless of their significance level, as advocated by Caliendo and Kopeinig (2008).
+
+
+```{r}
+prob1 = mod1$fitted.values
+pscore1 = ifelse( Fatalities$jail == "yes", prob1,(1-prob1) )
+weight1 = 1/pscore1
+
+mod1_new = lmer(frate ~ jail + rescale(unemp) + rescale(income) + rescale(beertax) + rescale(youngdrivers) + rescale(miles) + (1|state), data=Fatalities, weights=weight1)
+
+summary(mod1_new)$coef %>% round(., 3) %>% kable() %>% kable_styling()
+```
+We used logistic regression to determine the probability of treatment/control assignment, given the 5 chose covariates mentioned earlier. The estimated probablities were then converted to propensity scores, whose inverse are included as weights in the linear mixed model.
+After applying propensity score weighting, we still do not found significant treatment effect, as the factor level jailyes is not statistically significant at p = 0.05. Again, the covariates `unemp` and `youngdrivers` are statistically significant at p < 0.001.
+
+
+
+
+```{r}
+# balance analysis after propensity score estimation
+summary( lm(miles ~ jail, weight = weight1, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ jail, weight = weight1,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(beertax ~ jail, weight = weight1,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ jail, weight = weight1, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ jail, weight = weight1, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+```
+
+
+
+
+## Model 2 (control: breath)
+
+
+
+```{r}
+mod2 = glm( breath ~  unemp +  income + beertax + youngdrivers + miles, family="binomial", data=Fatalities)
+summary(mod2)
+```
+
+
+prob2 = mod2$fitted.values
+pscore2 = ifelse(Fatalities$breath == "yes", prob2,(1-prob2))
+weight2 = 1/pscore2
+mod2_new = lmer( frate ~ breath+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state),data=Fatalities, weights=weight2)
+summary(mod2_new)
+```
+
+
+
+
+
+
+Model 3 (control: service)
+```{r}
+mod3 = glm(service ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles),
+           family="binomial", data=Fatalities)
+prob3 = mod3$fitted.values
+pscore3 = ifelse(Fatalities$service == "yes", prob3,(1-prob3))
+weight3 = 1/pscore3
+mod3_new = lmer(frate~service+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+
+                  rescale(miles)+(1|state),data=Fatalities, weights=weight3)
+summary(mod3_new)
+```
+
+
+
+
+<!-- Model 4 (control: service) including jail in model -->
+<!-- ```{r} -->
+<!-- mod4 = glm(service ~ jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities) -->
+<!-- prob4 = mod4$fitted.values -->
+<!-- pscore4 = ifelse(Fatalities$service == "yes", prob4,(1-prob4)) -->
+<!-- weight4 = 1/pscore4 -->
+<!-- mod4_new = lmer(frate~service+jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|year),data=Fatalities, weights=weight4) -->
+<!-- summary(mod4_new) -->
+<!-- ``` -->
+
+
+
+<!-- Model 5 (control: jail) including service in model -->
+<!-- ```{r} -->
+<!-- mod5 = glm(jail ~ service+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+ -->
+<!--              rescale(miles), family="binomial", data=Fatalities) -->
+<!-- prob5 = mod5$fitted.values -->
+<!-- pscore5 = ifelse(Fatalities$service == "yes", prob5,(1-prob5)) -->
+<!-- weight5 = 1/pscore5 -->
+<!-- mod5_new = lmer(frate~service+jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+ -->
+<!--                   rescale(miles)+(1|year),data=Fatalities, weights=weight5) -->
+<!-- summary(mod5_new) -->
+<!-- ``` -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==========================================================================================
+                    Code used by TA in the discussion session
+==========================================================================================
+
+
+```{r}
+dat = Fatalities[, c('fatal', 'beertax', 'jail', 'unemp', 'state', 'youngdrivers')]
+dat = dat[!is.na(dat$jail), ]
+
+model1 = lmer(fatal~beertax+jail+unemp+youngdrivers+(1|state),data=dat)
+summary(model1)
+```
+Can we say that jail cannot cause the reduction or increase of fatalities?
+We cannot get causal effect from an observational study directly because there exists selection bias
+
+Balance analysis
+```{r}
+model2 = lm(unemp~jail, data=dat)
+summary(model2)
+```
+
+To remove the selection bias, we can use propensity scores as weights in our model
+First, we need to build a selection model for estimating the propensity scores
+The propensity score is defined as the conditional probability given background variables
+```{r}
+Fatalities$service = relevel(Fatalities$service, ref="no")
+models = glm(service ~ beertax+unemp+youngdrivers, family="binomial", data=Fatalities)
+prob = models$fitted.values
+pscore = ifelse(Fatalities$service == "yes", prob,(1-prob))
+weight = 1/pscore
+
+model_new = lmer(frate~beertax+service+unemp+youngdrivers+(1|state),data=Fatalities, weights=weight)
+summary(model_new)
+anova(model_new)
+```
+
+
+
+
