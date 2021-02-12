@@ -48,6 +48,7 @@ fatalities_gen
 null = lm(fatal ~ 1, data=fatalities_gen)
 full = lm(fatal ~ ., data=fatalities_gen)
 step.f<-stepAIC(null, scope = list(lower=null,upper=full), direction = 'forward', trace=FALSE)
+
 summary(step.f)
 datatable(confint.default(step.f)[-c(1),])
 par(mfrow=c(2,2))
@@ -118,7 +119,7 @@ ggplot(df, aes(x = x, y = F)) +
 - TODO should we do frate for the afatal only??
 - TODO outliers need to be managed.
 ```{r}
-drops <- c("nfatal","sfatal", "afatal", "state", "X1","fatal")
+drops <- c("nfatal","sfatal", "afatal", "X1","fatal","state")
 fatalities_rate = fatalities[,!grepl("1517", colnames(fatalities))]
 fatalities_rate = fatalities_rate[,!grepl("1820", colnames(fatalities_rate))]
 fatalities_rate = fatalities_rate[,!grepl("2124", colnames(fatalities_rate))]
@@ -130,18 +131,33 @@ colnames(fatalities_rate)
 fatalities_rate
 fatalities_rate <- na.omit(fatalities_rate)
 fatalities_rate
+boxplot(fatalities_rate$spirits)
+
 ```
 
 ```{r}
 null = lm(frate ~ 1, data=fatalities_rate)
 full = lm(frate ~ ., data=fatalities_rate)
+summary(full)
+```
+
+```{r}
 step.f<-stepAIC(null, scope = list(lower=null,upper=full), direction = 'forward', trace=FALSE)
 summary(step.f)
+```
+```{r}
+anova(step.f)
 datatable(confint.default(step.f)[-c(1),])
 par(mfrow=c(2,2))
 plot(step.f)
 ```
-
+```{r}
+fatalities_rate[170,]
+data("Produc", package = "plm")
+zz <- plm(log(gsp) ~ log(pcap) + log(pc) + log(emp) + unemp,
+          data = Produc, index = c("state","year"))
+summary(zz)
+```
 ```{r}
 ci = confint.default(step.f)
 
@@ -154,4 +170,18 @@ ggplot(df, aes(x = x, y = F)) +
   geom_errorbar(aes(ymax = U, ymin = L))+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+```
+
+```{r}
+Fatalities
+```
+
+```{r}
+mod1 = glm(jail ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities)
+prob1 = mod1$fitted.values
+pscore1 = ifelse(Fatalities$jail == "yes", prob1,(1-prob1))
+library("devtools"); install_github("lme4/lme4",dependencies=TRUE)
+
+mod1_new = lmer(frate~jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state),data=Fatalities, weights=weight)
+summary(mod1_new)
 ```

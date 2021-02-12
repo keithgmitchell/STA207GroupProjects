@@ -3,22 +3,24 @@ title: "Project 2"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r, echo=FALSE, include=FALSE, out.height = "100px", fig.height=6}
+# cant get this work
+htmltools::includeHTML("FatalitiesRDocumentation.html")
+```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis', include=FALSE}
 library(AER)
 data('Fatalities')
 ```
-
-```{r}
+- Explanation of variables found here: [Fatalities](https://www.rdocumentation.org/packages/AER/versions/1.2-9/topics/Fatalities)
+```{r echo=FALSE, warning=FALSE,  results='asis', include=FALSE}
 library(tidyverse)
 library(lubridate)
 library(timetk)
@@ -27,17 +29,18 @@ library(devtools)
 library(gtsummary)
 library(plotly)
 library(DT)
+library(tidyverse)
+library(lubridate)
 ```
 
 
-```{r}
-library(tidyverse)
-library(lubridate)
+```{r echo=FALSE, warning=FALSE,  results='asis'}
+
 ggplot(data = Fatalities, aes(x = year, y = fatal, group = state, colour = state)) +
     geom_line()
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 data1 = Fatalities[1:112, ]
 data2 = Fatalities[113:224, ]
 data3 = Fatalities[225:336, ]
@@ -70,7 +73,7 @@ ggplot(data = data3, aes(x = year, y = fatal, group = state, colour = state)) +
 
 We first make the time series plots for the number of fatalities of each state from 1982 to 1988. From the plots above, we can find that the numbers of fatalities vary a lot, making it difficult to identify if there is any pattern. Therefore, we try to use the ratio of the number of fatalities over the population of the state, and make the time series plots for each state again. From the plots below, we can observe that there are certain states show similar patterns. Therefore, we want to understand what the factors in this data set affect the change of the number of fatalities are. 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 ##Time series plots using the ratio of the total number of fatalities over the population of the state
 Fatalities$frate = Fatalities$fatal/Fatalities$pop
 data4 = Fatalities[1:112, ]
@@ -107,7 +110,7 @@ ggplot(data = data6, aes(x = year, y = frate, group = state, colour = state)) +
 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 jail_yes = subset(Fatalities, jail == 'yes') 
 jail_no = subset(Fatalities, jail == 'no') 
 hist(jail_no$fatal, main = 'Histogram of the number of fatalities without mandatory jail sentence')
@@ -119,7 +122,7 @@ mean(jail_yes$fatal)
 We are interested to know  if the mandatory jail sentence for the traffic fatalities has any relationship with the number of fatalities. From the histogram of the number of fatalities with mandatory jail sentence and that without, we find that the the number of fatalities with mandatory jail sentence is smaller than that without jail sentence. 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 hist(jail_no$frate, main = 'Histogram of the number of fatalities without mandatory jail sentence')
 hist(jail_yes$frate,  main = 'Histogram of the number of fatalities with mandatory jail sentence')
 ```
@@ -127,12 +130,12 @@ hist(jail_yes$frate,  main = 'Histogram of the number of fatalities with mandato
 However, because the populations of different states vary, we also use the ratio of the total number of fatalities over the population of the state to plot histograms again, and we find that the ratio in the histogram of mandatory jail sentence is larger than that that in the histogram without jail sentence. So, the population of each state may be affecting our analysis. 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 Fatalities$drinkage = round(Fatalities$drinkage)
 Fatalities$drinkage = as.factor(Fatalities$drinkage)
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 ggplot(Fatalities, aes(x=drinkage, y=fatal)) + 
   geom_boxplot(outlier.shape=NA) + #avoid plotting outliers twice
   geom_jitter(position=position_jitter(width=.1, height=0))
@@ -140,46 +143,53 @@ ggplot(Fatalities, aes(x=drinkage, y=fatal)) +
 
 We also investigate the relationship between the number of fatalities and the minimum legal drinking age. Since the minimum drinking ages are not necessarily whole numbers, we round them to the nearest integer. From the twp-way box plot above, we can observe that the states with legal minimum drinking ages 18 and 21 are associated with the largest average number of fatalities, and that the states with minimum legal drinking age 20 seems has the smallest average number of fatalities. We also noticed that the data points of minimum drinking age 21 disperse widely.   
 
-```{r}
-test <- Fatalities %>% select(drinkage, miles, income, unemp, fatal)
-test %>% tbl_summary(by=drinkage, statistic = list(all_continuous() ~ "{mean} ({sd}, {median}, {IQR})")) %>% add_p()
+```{r echo=FALSE, warning=FALSE,  results='asis'}
+test <- Fatalities %>% select(unemp, frate, jail)
+test %>% tbl_summary(by=jail, digits = all_continuous() ~ 6, statistic = list(frate ~ "{mean} ({sd}, {median}, {IQR})")) %>% add_p()
 
-summary(Fatalities$miles)
+
+test <- Fatalities %>% select(frate, drinkage)
+test %>% tbl_summary(by=drinkage, digits = all_continuous() ~ 6, statistic = list(frate ~ "{mean} ({sd}, {median}, {IQR})")) %>% add_p()
+```
+
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 plot(Fatalities$milestot, Fatalities$fatal, xlab = 'Total vechicle miles', ylab = 'The number of fatalities' )
 ```
 
 From the plot above, we can find that the there is a linear relationship between the number of fatalities and total vehicle miles. 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 plot(Fatalities$income, Fatalities$fatal, xlab = 'income', ylab = 'Number of fatalities')
 plot(Fatalities$income, Fatalities$frate, xlab = 'income', ylab = 'Fatality ratio')
 ```
 
 From the plots above, we can not find any relationship between the number of fatalities and income. However, if we use the ratio of the total number of fatalities over the population of the state, we can find there is a quadratic pattern between income and the ratio.
-```{r}
-summary(Fatalities$income)
-```
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 Fatalities$inc_cat = ifelse(Fatalities$income <= 12086, '1st',ifelse(Fatalities$income > 12086 & Fatalities$income <=13763, '2nd',ifelse(Fatalities$income >13763 & Fatalities$income <=15175, '3rd', '4th')))
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
+test <- Fatalities %>% select(frate, bina)
+test %>% tbl_summary(by=inc_cat, digits = all_continuous() ~ 6, statistic = list(frate ~ "{mean} ({sd}, {median}, {IQR})")) %>% add_p()
+```
+
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 boxplot(Fatalities$fatal~Fatalities$inc_cat, xlab = 'Quantile of income', ylab = 'Number of fatal')
 ```
 
 We use quantiles to reclassify income, and plot the two-way box plot between income and the number of fatalities. We can observe that the third and fourth quantiles of incomes have higher average numbers of fatalities.
-```{r}
-summary(Fatalities$unemp)
+```{r echo=FALSE, warning=FALSE,  results='asis'}
+#summary(Fatalities$unemp)
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 Fatalities$unem_cat = ifelse(Fatalities$unemp <= 5.475, '1st',ifelse(Fatalities$unemp > 5.475  & Fatalities$unemp <=7.000, '2nd',ifelse(Fatalities$unemp >7.000 & Fatalities$unemp <=8.900, '3rd', '4th')))
 ```
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 boxplot(Fatalities$fatal~Fatalities$unem_cat, xlab = 'Quantile of unemployment rate', ylab = 'Number of fatal')
 ```
 
@@ -188,6 +198,6 @@ We use quantiles to reclassify unemployment rate, and plot two-way box plot betw
 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE,  results='asis'}
 write.csv(Fatalities, 'post_EDA.csv')
 ```
