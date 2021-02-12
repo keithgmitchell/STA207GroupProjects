@@ -1,0 +1,79 @@
+---
+title: "Project 2"
+author: "Yige Luo"
+date: "2/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r loadLibs,warning=FALSE,message=FALSE}
+library(AER)
+library(tidyverse)
+library(lmerTest)
+library(scales)
+library(kableExtra)
+```
+
+
+```{r loadData}
+data('Fatalities')
+```
+
+
+```{r addVariables}
+# fatalities caused by young drivers aged 15-24
+Fatalities$fatal_young <- 
+  Fatalities$fatal1517 + Fatalities$fatal1820 + Fatalities$fatal2124
+
+# fatalities caused by drivers aged 25+
+Fatalities$fatal_non_young <- 
+  Fatalities$fatal - Fatalities$fatal_young
+
+
+# population demography of young drivers aged 15-24
+Fatalities$young_pop <- 
+  Fatalities$pop1517 + Fatalities$pop1820 + Fatalities$pop2124
+
+# population demography of non-young drivers (age 25+)
+Fatalities$non_young_pop <- Fatalities$pop - Fatalities$young_pop 
+
+# # fatality rate attributable to non-young drivers (age 25+)
+# Fatalities$frate_non_young <- 
+#   (Fatalities$fatal- Fatalities$fatal_young_group)/Fatalities$non_young_pop
+#   
+# # fatality rate attributable to young drivers (age 15-24)
+# Fatalities$frate_young <-  Fatalities$fatal_young_group / Fatalities$young_pop
+# 
+# # proportions of drivers that are non young (age 25+)
+# Fatalities$non_youngdrivers <- 1 - Fatalities$youngdrivers
+# 
+# proportions of state population who are young (age 15-24)
+Fatalities$young <- Fatalities$young_pop / Fatalities$pop
+# 
+# # proportions of state population who are not young (age 25+)
+# Fatalities$non_young <- 1 - Fatalities$young 
+
+
+```
+
+```{r ProportionTests}
+DriverDemo <- 
+  Fatalities %>% 
+  select(fatal_young, fatal, young)
+
+# raw p-values of proportion tests
+pvals <- 
+sapply(1:336, function(i) prop.test(DriverDemo[i,1],DriverDemo[i,2], DriverDemo[i,3], alternative = "greater" )$p.value
+)
+
+# adjusted p values by Benjamin-Hochberg
+max (p.adjust(pvals, "BH") )
+
+```
+
+Even the largest p-value is below 0.01 significance level after Benjamin-Hochberg multiple test correction, we conclude that there is an over-representation of young drivers (age 15-24) in traffic fatalities then expected by chance.
