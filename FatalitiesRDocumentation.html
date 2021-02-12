@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html class="">
+  <head>
+    
+      <title>Fatalities function | R Documentation</title>
+    
+    
+    <base href="https://www.rdocumentation.org">
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv=Content-Type content=text/html; charset="UTF-8">
+    
+      <meta name="description" content="&lt;p&gt;US traffic fatalities panel data for the &#8220;lower 48&#8221; US states 
+(i.e., excluding Alaska and Hawaii), annually for 1982 through 1988.&lt;/p&gt;" />
+    
+    
+      <link href="/packages/AER/versions/1.2-9/topics/Fatalities" rel="canonical" />
+    
+
+    <!-- No index if not production -->
+    
+
+    <!--STYLES-->
+    <link rel="stylesheet" href="/min/production.min.702e152d1c072db370ae8520b7e2d417.css">
+    <!--STYLES END-->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <link rel="stylesheet" href='/css/nv.d3.min.css'>
+    <link rel="stylesheet" href='/css/bootstrap-treeview.css'>
+     <link rel="stylesheet" href='/css/bootstrap-glyphicons.css'>
+    <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css'>
+    <link href = "https://code.jquery.com/ui/1.12.0-rc.2/themes/smoothness/jquery-ui.css" rel = "stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-WB38P87');</script>
+    <!-- End Google Tag Manager -->
+  </head>
+
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WB38P87"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div id="content">
+      
+  
+  
+  <section class="navbar navbar-color navbar-fixed-top">
+    <nav class="clearfix">
+      <div class="navbar--title">
+        <a href="/">
+          <div class="logo"></div>
+          <div class="logo-title"><span>RDocumentation</span></div>
+        </a>
+      </div>
+      <ul class="navbar--navigation largescreen">
+  <li><a href="https://www.datacamp.com/groups/business" class="btn btn-secondary-dark">R Enterprise Training</a></li>
+  
+    <li><a href="https://github.com/datacamp/Rdocumentation" class="btn btn-secondary">R package</a></li>
+    <li><a href="/trends" class="btn btn-secondary">Leaderboard</a></li>
+
+    
+      <li><a href="/login?rdr=%2Fpackages%2FAER%2Fversions%2F1.2-9%2Ftopics%2FFatalities" class="btn btn-primary">Sign in</a></li>
+    
+  
+</ul>
+
+      <div class="navbar--search">
+        <form class="search" action="/search" method="get">
+          <input name="q" id = "searchbar" type="text" placeholder="Search for packages, functions, etc" autocomplete="off">
+          <input name="latest" id="hidden_latest" type="hidden" />
+          <div class="search--results"></div>
+        </form>
+      </div>
+    </nav>
+  </section>
+
+
+  <div class="page-wrap">
+      
+    
+  
+  
+  
+
+    
+<section class="topic packageData"
+  data-package-name="AER"
+  data-latest-version="1.2-9"
+  data-dcl='false' >
+
+  <header class='topic-header'>
+  <div class="container">
+
+    <div class="th--flex-position">
+      <div> <!-- Do not remove this div, needed for th-flex-position -->
+        <h1>Fatalities</h1>
+      </div>
+      <div> <!-- Do not remove this div, needed for th-flex-position -->
+        <div class="th--pkg-info">
+          <div class="th--origin">
+            <span>From <a href="/packages/AER/versions/1.2-9">AER v1.2-9</a></span>
+            
+              <span>by <a href="/collaborators/name/Achim Zeileis">Achim Zeileis</a></span>
+            
+          </div>
+          <div class="th--percentile">
+            
+            
+  <div class="percentile-widget percentile-task" data-url="/api/packages/AER/percentile">
+    <span class="percentile-th">
+      <span class='percentile'>0th</span>
+    </span>
+    <p>Percentile</p>
+  </div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+  <div class="container">
+    <section>
+      <h5>US Traffic Fatalities</h5>
+      <p><p>US traffic fatalities panel data for the &#8220;lower 48&#8221; US states 
+(i.e., excluding Alaska and Hawaii), annually for 1982 through 1988.</p></p>
+    </section>
+
+    
+      <section class="topic--keywords">
+        <div class="anchor" id="l_keywords"></div>
+        <dl>
+          <dt>Keywords</dt>
+                    <dd><a href="/search/keywords/datasets">datasets</a></dd>
+        </dl>
+      </section>
+    
+
+    
+      <section id="usage">
+        <div class="anchor" id="l_usage"></div>
+        <h5 class="topic--title">Usage</h5>
+        <pre><code class="R">data("Fatalities")</code></pre>
+      </section>
+    
+
+    
+
+    <!-- Other info -->
+    
+      <section>
+        <div class="anchor" id="l_details"></div>
+        <h5 class="topic--title">Details</h5>
+        <p><p>Traffic fatalities are from the US Department of 
+Transportation Fatal Accident Reporting System.  The beer tax is the 
+tax on a case of beer, which is an available measure of state 
+alcohol taxes more generally. The drinking age variable is a factor 
+indicating whether the legal drinking age is 18, 19, or 20.  
+The two binary punishment variables  describe the state's minimum 
+sentencing requirements for an initial drunk driving conviction.</p>
+<p>Total vehicle miles traveled annually by state was obtained from 
+the Department of Transportation. Personal income was obtained 
+from the US Bureau of Economic Analysis, and the unemployment 
+rate was obtained from the US Bureau of Labor Statistics.</p></p>
+      </section>
+    
+
+    
+
+    
+
+    
+      <div class="anchor" id="l_sections"></div>
+      
+        
+        <section>
+          <h5 class="topic--title">Format</h5>
+          <p><p>A data frame containing 336 observations on 34 variables.</p><dl class="dl-horizontal">
+  <dt>state</dt><dd><p>factor indicating state.</p></dd>
+  <dt>year</dt><dd><p>factor indicating year.</p></dd>
+  <dt>spirits</dt><dd><p>numeric. Spirits consumption.</p></dd>
+  <dt>unemp</dt><dd><p>numeric. Unemployment rate.</p></dd>
+  <dt>income</dt><dd><p>numeric. Per capita personal income in 1987 dollars.</p></dd>  
+  <dt>emppop</dt><dd><p>numeric. Employment/population ratio.</p></dd>
+  <dt>beertax</dt><dd><p>numeric. Tax on case of beer.</p></dd>
+  <dt>baptist</dt><dd><p>numeric. Percent of southern baptist.</p></dd>
+  <dt>mormon</dt><dd><p>numeric. Percent of mormon.</p></dd>
+  <dt>drinkage</dt><dd><p>numeric. Minimum legal drinking age.</p></dd>   
+  <dt>dry</dt><dd><p>numeric. Percent residing in &#8220;dry&#8221; countries.</p></dd>
+  <dt>youngdrivers</dt><dd><p>numeric. Percent of drivers aged 15--24.</p></dd>
+  <dt>miles</dt><dd><p>numeric. Average miles per driver.</p></dd>
+  <dt>breath</dt><dd><p>factor. Preliminary breath test law?</p></dd>
+  <dt>jail</dt><dd><p>factor. Mandatory jail sentence?</p></dd>
+  <dt>service</dt><dd><p>factor. Mandatory community service?</p></dd>
+  <dt>fatal</dt><dd><p>numeric. Number of vehicle fatalities.</p></dd>
+  <dt>nfatal</dt><dd><p>numeric. Number of night-time vehicle fatalities.</p></dd>  
+  <dt>sfatal</dt><dd><p>numeric. Number of single vehicle fatalities.</p></dd>    
+  <dt>fatal1517</dt><dd><p>numeric. Number of vehicle fatalities, 15--17 year olds.</p></dd>    
+  <dt>nfatal1517</dt><dd><p>numeric. Number of night-time vehicle fatalities, 15--17 year olds.</p></dd>  
+  <dt>fatal1820</dt><dd><p>numeric. Number of vehicle fatalities, 18--20 year olds.</p></dd>    
+  <dt>nfatal1820</dt><dd><p>numeric. Number of night-time vehicle fatalities, 18--20 year olds.</p></dd>  
+  <dt>fatal2124</dt><dd><p>numeric. Number of vehicle fatalities, 21--24 year olds.</p></dd>    
+  <dt>nfatal2124</dt><dd><p>numeric. Number of night-time vehicle fatalities, 21--24 year olds.</p></dd>  
+  <dt>afatal</dt><dd><p>numeric. Number of alcohol-involved vehicle fatalities.</p></dd>    
+  <dt>pop</dt><dd><p>numeric. Population.</p></dd>  
+  <dt>pop1517</dt><dd><p>numeric. Population, 15--17 year olds.</p></dd>  
+  <dt>pop1820</dt><dd><p>numeric. Population, 18--20 year olds.</p></dd>    
+  <dt>pop2124</dt><dd><p>numeric. Population, 21--24 year olds.</p></dd>      
+  <dt>milestot</dt><dd><p>numeric. Total vehicle miles (millions).</p></dd>      
+  <dt>unempus</dt><dd><p>numeric. US unemployment rate.</p></dd>        
+  <dt>emppopus</dt><dd><p>numeric. US employment/population ratio.</p></dd>          
+  <dt>gsp</dt><dd><p>numeric. GSP rate of change.</p></dd>          
+</dl></p>
+        </section>
+      
+    
+
+    
+      <section>
+        <div class="anchor" id="l_references"></div>
+        <h5 class="topic--title">References</h5>
+        <p><p>Ruhm, C. J. (1996). Alcohol Policies and Highway Vehicle Fatalities. 
+<em>Journal of Health Economics</em>, <b>15</b>, 435--454.</p>
+<p>Stock, J. H. and Watson, M. W. (2007). <em>Introduction to Econometrics</em>, 2nd ed. Boston: Addison Wesley.</p></p>
+      </section>
+    
+
+    
+      <section>
+        <div class="anchor" id="l_seealso"></div>
+        <h5 class="topic--title">See Also</h5>
+        <p><p><code><a rd-options="" href="/link/StockWatson2007?package=AER&version=1.2-9" data-mini-rdoc="AER::StockWatson2007">StockWatson2007</a></code></p></p>
+      </section>
+    
+
+    
+      <section style="display: none;">
+        <div class="anchor" id="alss"></div>
+        <h5 class="topic--title">Aliases</h5>
+        <ul class="topic--aliases">
+        
+          <li>Fatalities</li>
+        
+        </ul>
+      </section>
+    
+
+    
+      <section>
+        <div class="anchor" id="l_examples"></div>
+        <h5 class="topic--title">Examples</h5>
+          
+            <pre><code class="R" data-package-name = AER># NOT RUN {
+## data from Stock and Watson (2007)
+data(&quot;Fatalities&quot;, package = &quot;AER&quot;)
+## add fatality rate (number of traffic deaths
+## per 10,000 people living in that state in that year)
+Fatalities$frate &lt;- with(Fatalities, fatal/pop * 10000)
+## add discretized version of minimum legal drinking age
+Fatalities$drinkagec &lt;- cut(Fatalities$drinkage,
+  breaks = 18:22, include.lowest = TRUE, right = FALSE)
+Fatalities$drinkagec &lt;- relevel(Fatalities$drinkagec, ref = 4)
+## any punishment?
+Fatalities$punish &lt;- with(Fatalities,
+  factor(jail == &quot;yes&quot; | service == &quot;yes&quot;, labels = c(&quot;no&quot;, &quot;yes&quot;)))
+## plm package
+library(&quot;plm&quot;)
+
+## for comparability with Stata we use HC1 below
+## p. 351, Eq. (10.2)
+f1982 &lt;- subset(Fatalities, year == &quot;1982&quot;)
+fm_1982 &lt;- lm(frate ~ beertax, data = f1982)
+coeftest(fm_1982, vcov = vcovHC(fm_1982, type = &quot;HC1&quot;))
+
+## p. 353, Eq. (10.3)
+f1988 &lt;- subset(Fatalities, year == &quot;1988&quot;)
+fm_1988 &lt;- lm(frate ~ beertax, data = f1988)
+coeftest(fm_1988, vcov = vcovHC(fm_1988, type = &quot;HC1&quot;))
+
+## pp. 355, Eq. (10.8)
+fm_diff &lt;- lm(I(f1988$frate - f1982$frate) ~ I(f1988$beertax - f1982$beertax))
+coeftest(fm_diff, vcov = vcovHC(fm_diff, type = &quot;HC1&quot;))
+
+## pp. 360, Eq. (10.15)
+##   (1) via formula
+fm_sfe &lt;- lm(frate ~ beertax + state - 1, data = Fatalities)
+##   (2) by hand
+fat &lt;- with(Fatalities,
+  data.frame(frates = frate - ave(frate, state),
+  beertaxs = beertax - ave(beertax, state)))
+fm_sfe2 &lt;- lm(frates ~ beertaxs - 1, data = fat)
+##   (3) via plm()
+fm_sfe3 &lt;- plm(frate ~ beertax, data = Fatalities,
+  index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;)
+
+coeftest(fm_sfe, vcov = vcovHC(fm_sfe, type = &quot;HC1&quot;))[1,]
+## uses different df in sd and p-value
+coeftest(fm_sfe2, vcov = vcovHC(fm_sfe2, type = &quot;HC1&quot;))[1,]
+## uses different df in p-value
+coeftest(fm_sfe3, vcov = vcovHC(fm_sfe3, type = &quot;HC1&quot;, method = &quot;white1&quot;))[1,]
+
+
+## pp. 363, Eq. (10.21)
+## via lm()
+fm_stfe &lt;- lm(frate ~ beertax + state + year - 1, data = Fatalities)
+coeftest(fm_stfe, vcov = vcovHC(fm_stfe, type = &quot;HC1&quot;))[1,]
+## via plm()
+fm_stfe2 &lt;- plm(frate ~ beertax, data = Fatalities,
+  index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;, effect = &quot;twoways&quot;)
+coeftest(fm_stfe2, vcov = vcovHC) ## different
+
+
+## p. 368, Table 10.1, numbers refer to cols.
+fm1 &lt;- plm(frate ~ beertax, data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;pooling&quot;)
+fm2 &lt;- plm(frate ~ beertax, data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;)
+fm3 &lt;- plm(frate ~ beertax, data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;,
+  effect = &quot;twoways&quot;)
+fm4 &lt;- plm(frate ~ beertax + drinkagec + jail + service + miles + unemp + log(income),
+  data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;, effect = &quot;twoways&quot;)
+fm5 &lt;- plm(frate ~ beertax + drinkagec + jail + service + miles,
+  data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;, effect = &quot;twoways&quot;)
+fm6 &lt;- plm(frate ~ beertax + drinkage + punish + miles + unemp + log(income),
+  data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;, effect = &quot;twoways&quot;)
+fm7 &lt;- plm(frate ~ beertax + drinkagec + jail + service + miles + unemp + log(income),
+  data = Fatalities, index = c(&quot;state&quot;, &quot;year&quot;), model = &quot;within&quot;, effect = &quot;twoways&quot;)
+## summaries not too close, s.e.s generally too small
+coeftest(fm1, vcov = vcovHC)
+coeftest(fm2, vcov = vcovHC)
+coeftest(fm3, vcov = vcovHC)
+coeftest(fm4, vcov = vcovHC)
+coeftest(fm5, vcov = vcovHC)
+coeftest(fm6, vcov = vcovHC)
+coeftest(fm7, vcov = vcovHC)
+
+## TODO: Testing exclusion restrictions
+
+# }
+</code></pre>
+          
+      </section>
+      
+    
+    <small>
+      <i> Documentation reproduced from package <span itemprop="name">AER</span>, version <span itemprop="version">1.2-9</span>,
+        License: GPL-2 | GPL-3
+      </i>
+    </small>
+
+    
+    
+
+    <div class='user-examples' id="postExample">
+      <h3>Community examples</h3>
+      <div class="example-content">
+        
+          <div class="example--placeholder">Looks like there are no examples yet.</div>
+        
+        
+      </div>
+      <div class="example--form">
+  <div class="example--form-body">
+    <form method="post" action='/api/topics/8625245/examples'>
+      <fieldset class="example--form-text">
+        <label for="text"><h3 id="postExampleTitle">Post a new example:</h3></label>
+        <textarea name='text' rows="4" id="postExampleText"></textarea>
+      </fieldset>
+      <fieldset>
+        
+        <a id="openModalExample" href="/modalLogin" rel = "modal:open"><button class="btn btn-primary pull-right" type="button">Submit your example</button></a>
+        
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+    </div>
+
+  </div>
+</section>
+
+  </div>
+
+  <div class="footer">
+  <a class="navbar--title apidoc btn btn-default js-external" target="_blank" href="/docs">
+      <i class="fa fa-cogs"></i>
+      API documentation
+  </a>
+  <div class="navbar--title footer-largescreen pull-right">
+  
+  	<a href=https://github.com/datacamp/rdocumentation class="js-external">
+  		<div class="github"></div>
+  		<div class="logo-title">R package</div>
+  	</a>
+  
+   </div>
+   <div class="navbar--title footer-largescreen pull-right">
+  	<a href = "https://github.com/datacamp/rdocumentation-app" class="js-external">
+  		<div class="github"></div>
+  		<div class="logo-title">Rdocumentation.org</div>
+  	</a>
+  </div>
+  <div class="footer--credits--title">
+	<p class="footer--credits">Created by <a href="https://www.datacamp.com" class="js-external">DataCamp.com</a></p>
+  </div>
+</div>
+
+
+
+    </div>
+    
+      
+<div class="dc-footer">
+  <span class="dc-footer--text">
+    Put your R skills to the test
+  </span>
+  <a class="dc-footer--link btn btn-primary ds-snowplow-btn-rdocs-signal" href="https://assessment.datacamp.com/r-programming?utm_source=rdocumentation.org&utm_medium=referral&utm_campaign=footer">Start Now</a>
+  <span class="dc-footer--cross"><i class="fa fa-times" aria-hidden="true"></i></span>
+</div>
+
+
+    
+
+    <!--TEMPLATES-->
+    
+    <!--TEMPLATES END-->
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.27.2/js/jquery.tablesorter.min.js"> </script>
+    <script src = "https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"> </script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.3/nv.d3.min.js"> </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+    <script src = "https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [ ['$','$'], ['\\(','\\)']  ],
+          displayMath: [ ['$$','$$'] ],
+          processEscapes: true,
+          packages: ['base', 'ams', 'noerrors', 'noundefined']
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        },
+        loader: {
+          load: ['[tex]/noerrors']
+        }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script"></script>
+    
+      <script src="https://cdn.datacamp.com/datacamp-light-latest.min.js"></script>
+    
+    <script type="text/javascript">
+      var $jq = jQuery.noConflict();
+    </script>
+    <!--SCRIPTS-->
+    <script src="/min/production.min.a1c36bb24ba63c84ff62414613ecdd8d.js"></script>
+    <!--SCRIPTS END-->
+
+    <!-- Snowplow starts plowing -->
+<script type="text/javascript">
+
+    ;(function(p,l,o,w,i,n,g){if(!p[i]){p.GlobalSnowplowNamespace=p.GlobalSnowplowNamespace||[];
+    p.GlobalSnowplowNamespace.push(i);p[i]=function(){(p[i].q=p[i].q||[]).push(arguments)
+    };p[i].q=p[i].q||[];n=l.createElement(o);g=l.getElementsByTagName(o)[0];n.async=1;
+    n.src=w;g.parentNode.insertBefore(n,g)}}(window,document,"script","//cdn.datacamp.com/sp/2.10.2.js","snowplow"));
+
+    var options = {
+      appId: 'rdocumentation',
+      platform: 'web',
+      post: true,
+      discoverRootDomain: true,
+      contexts: {
+        webPage: true,
+        performanceTiming: true
+      }
+    };
+
+    
+      options.forceSecureTracker = true;
+      options.postPath = '/spevent';
+    
+
+    window.snowplow('newTracker', 'co', "www.datacamp.com", options);
+    window.snowplow('enableActivityTracking', 10, 10); // Ping every 10 seconds after 10 seconds
+    window.snowplow('enableLinkClickTracking');
+
+    window.snowplow('trackPageView', null, [
+      {
+        schema: 'iglu:com.datacamp/user/jsonschema/1-0-0',
+        data: {
+          anonId: $jq.cookie('dc_aid'),
+        }
+      }
+    ]);
+
+    var config = {
+      forms: {
+        whitelist: ["snowplow_tracked"]
+      },
+      fields: {
+        blacklist: ['password', 'password_confirmation']
+      }
+    };
+
+    window.snowplow('enableFormTracking', config);
+</script>
+<!-- Snowplow stop plowing -->
+
+
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-41577880-1', 'rdocumentation.org');
+      ga('send', 'pageview');
+    </script>
+
+    <script async src="https://promo.datacamp.com/banner.js"></script>
+  </body>
+</html>

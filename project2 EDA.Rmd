@@ -3,9 +3,16 @@ title: "Project 2"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r, echo=FALSE, out.height = "100px", fig.height=6}
+# cant get this work
+htmltools::includeHTML("FatalitiesRDocumentation.html")
+```
+
 
 
 ```{r echo=FALSE, warning=FALSE,  results='asis', include=FALSE}

@@ -18,6 +18,7 @@ library(lubridate)
 library(dplyr)
 library(lmerTest)
 library(scales)
+library(kableExtra)
 ```
 
 
@@ -27,7 +28,10 @@ data('Fatalities')
 
 
 ```{r}
+Fatalities = Fatalities[-c(28),]
 summary(Fatalities)
+summary(lm(unemp~jail, data=Fatalities))$coefficients %>% kable() %>% kable_styling()
+#sum$coefficients %>% kable() %>% kable_styling()
 ```
 
 Observe the row(s) containing NA value in "jail" and/or "service".
@@ -139,7 +143,10 @@ Fatalities$jail = relevel(Fatalities$jail, ref="no")
 mod1 = glm(jail ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles),
            family="binomial", data=Fatalities)
 summary(mod1)
+```
 
+
+```{r}
 prob1 = mod1$fitted.values
 pscore1 = ifelse(Fatalities$jail == "yes", prob1,(1-prob1))
 weight1 = 1/pscore1
@@ -168,6 +175,8 @@ pscore2 = ifelse(Fatalities$breath == "yes", prob2,(1-prob2))
 weight2 = 1/pscore2
 mod2_new = lmer(frate~breath+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state),data=Fatalities, weights=weight2)
 summary(mod2_new)
+
+anova( lm(frate ~ year + state, data = Fatalities))
 ```
 
 
@@ -217,17 +226,15 @@ summary(mod5_new)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+Model 6 (control: )
+```{r}
+mod6 = glm(breath ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities)
+prob6 = mod6$fitted.values
+pscore6 = ifelse(Fatalities$breath == "yes", prob6,(1-prob6))
+weight6 = 1/pscore6
+mod6_new = lmer(frate_18to20~drinkage+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state)+(1|year),data=Fatalities, weights=weight6)
+summary(mod6_new)
+```
 
 
 
