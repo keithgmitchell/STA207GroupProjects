@@ -28,10 +28,14 @@ data('Fatalities')
 
 
 ```{r}
-Fatalities = Fatalities[-c(28),]
+Fatalities
+Fatalities$nfrate_18to20 = Fatalities$nfatal1820/Fatalities$pop1820
+Fatalities$nfrate_15to17 = Fatalities$nfatal1517/Fatalities$pop1517
+
+Fatalities$frate_18to20 = Fatalities$fatal1820/Fatalities$pop1820
+Fatalities$frate_15to17 = Fatalities$fatal1517/Fatalities$pop1517
+
 summary(Fatalities)
-summary(lm(unemp~jail, data=Fatalities))$coefficients %>% kable() %>% kable_styling()
-#sum$coefficients %>% kable() %>% kable_styling()
 ```
 
 Observe the row(s) containing NA value in "jail" and/or "service".
@@ -40,7 +44,7 @@ One row (row #28) has NA in the two variables.
 Fatalities[which(is.na(Fatalities$jail) | is.na(Fatalities$service)), ]
 
 
-Fatalities <- Fatalities[-28, ]
+#Fatalities <- Fatalities[-28, ]
 ```
 
 
@@ -226,7 +230,7 @@ summary(mod5_new)
 
 
 
-Model 6 (control: )
+Model 6 (control: drinkage on frate_18to20)
 ```{r}
 mod6 = glm(breath ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities)
 prob6 = mod6$fitted.values
@@ -236,6 +240,15 @@ mod6_new = lmer(frate_18to20~drinkage+rescale(unemp)+rescale(income)+rescale(bee
 summary(mod6_new)
 ```
 
+Model 6 (control: drinkage on frate_15to17)
+```{r}
+mod6 = glm(breath ~ rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities)
+prob6 = mod6$fitted.values
+pscore6 = ifelse(Fatalities$breath == "yes", prob6,(1-prob6))
+weight6 = 1/pscore6
+mod6_new = lmer(frate_15to17~drinkage+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state)+(1|year),data=Fatalities, weights=weight6)
+summary(mod6_new)
+```
 
 
 
