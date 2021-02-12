@@ -1,0 +1,7 @@
+---
+title: Investigation of Policy and Legislative Actions for the Reduction of Fatal
+  Traffic Incidents in Relation to Alcohol and Socio-Economic Factors
+author: "Keith Mitchell, ..."
+date: "2/12/2021"
+output: html_document
+---
