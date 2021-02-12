@@ -207,17 +207,14 @@ Next we performed a balance analysis, trying to assess the degree of bias during
 
 ```{r}
 # balance analysis before estimating propensity scores
-summary( lm(miles ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
-summary( lm(income ~ jail, data = Fatalities) ) $coefficients %>% round(., 2)%>% kable() %>% kable_styling()
-summary( lm(beertax ~ jail, data = Fatalities) )$coefficients %>% round(., 2)%>% kable() %>% kable_styling()
-summary( lm(youngdrivers ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
-summary( lm(unemp ~ jail, data = Fatalities) )$coefficients %>% round(., 2) %>% kable() %>% kable_styling()
+summary( lm(miles ~ jail, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ jail, data = Fatalities) ) $coefficients %>% round(., 3)%>% kable() %>% kable_styling()
+summary( lm(beertax ~ jail, data = Fatalities) )$coefficients %>% round(., 3)%>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ jail, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ jail, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
 ```
 
-Although covariates `beertax`, `youngdrives`, and `miles` do not show imbalance between treatment (jail = yes) and control (jail = no ) groups, covariates `income` and `unemp` shows noticeable imbalance (p < 0.01 for both), and therefore entails balance adjustments as they will lead to selection bias if unattended.
-
-
-
+This time it turns out that covariate `unemp` shows strong imbalance between treatment (jail = yes) and control (jail = no ) groups (p < 0.01), and covariate `income` shows a marginal significant imbalance (p < 0.05). Although not significant, the significance levels of covariates `miles` and `beertax` are close to p = 0.05 level, also suggesting potential selection bias. These should be addressed using propensity scores.
 
 
 ```{r}
@@ -225,7 +222,7 @@ mod1 = glm(jail ~ unemp + income + beertax + youngdrivers + miles,
            family="binomial", data=Fatalities)
 summary(mod1)$coef %>% round(., 3) %>% kable() %>% kable_styling()
 ```
-As expected from descriptive analysis, we found that covariate `income` significantly impact the assignment to treatment or control group at p < 0.05. Note that the significance level of `unemp` does not reach p = 0.1, probably due to its strong negative correlation with `income` (r = -0.55) and therefore does not contribute more information when `income` is included in the model. We decide to keep all 5 variables in the selection model regardless of their significance level, as advocated by Caliendo and Kopeinig (2008).
+We found that covariate `unemp` significantly impact the assignment to treatment or control group at p < 0.001, and covariate `miles` significantly impact the assignment to treatment or control group at p < 0.01. Again, all 5 variables are included in the selection model regardless of their significance level,
 
 
 ```{r}
@@ -241,8 +238,6 @@ We used logistic regression to determine the probability of treatment/control as
 After applying propensity score weighting, we still do not found significant treatment effect, as the factor level jailyes is not statistically significant at p = 0.05. Again, the covariates `unemp` and `youngdrivers` are statistically significant at p < 0.001.
 
 
-
-
 ```{r}
 # balance analysis after propensity score estimation
 summary( lm(miles ~ jail, weight = weight1, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
@@ -253,28 +248,61 @@ summary( lm(unemp ~ jail, weight = weight1, data = Fatalities) )$coefficients %>
 ```
 
 
+The selection biases by `income` and `unemp` are reduced much after propensity score weighting.
 
 
 ## Model 2 (control: breath)
 
+```{r warning=FALSE}
+
+summary( lmer(frate ~ breath + rescale(unemp) + rescale(income) + rescale(beertax) + rescale(youngdrivers) +  rescale(miles) + (1|state), data=Fatalities) )$coef %>% round(.,3) %>%  kable() %>% kable_styling()
+
+```
+
+We found a marginally treatment effect, as the factor level breathyes is statistically significant at p = 0.05. Interestingly, the covariates `unemp` and `youngdrivers` are statistically significant at p < 0.001.
+
+
+Likewise, we performed a balance analysis before the use of propensity scores.
+
+```{r}
+# balance analysis before estimating propensity scores
+summary( lm(miles ~ breath, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ breath, data = Fatalities) ) $coefficients %>% round(., 3)%>% kable() %>% kable_styling()
+summary( lm(beertax ~ breath, data = Fatalities) )$coefficients %>% round(., 3)%>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ breath, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ breath, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+```
+
+This time it turns out that covariate `unemp` shows strong imbalance between treatment (jail = yes) and control (jail = no ) groups (p < 0.01), and covariate `income` shows a marginal significant imbalance (p < 0.05). Although not significant, the significance levels of covariates `miles` and `beertax` are close to p = 0.05 level, also suggesting potential selection bias. These should be addressed using propensity scores.
 
 
 ```{r}
-mod2 = glm( breath ~  unemp +  income + beertax + youngdrivers + miles, family="binomial", data=Fatalities)
-summary(mod2)
+mod2 = glm(breath ~ unemp + income + beertax + youngdrivers + miles,
+           family="binomial", data=Fatalities)
+summary(mod2)$coef %>% round(., 3) %>% kable() %>% kable_styling()
 ```
+ We found that covariate `unemp` significantly impact the assignment to treatment or control group at p < 0.001, and covariate `miles` significantly impact the assignment to treatment or control group at p < 0.0. Again, all 5 variables are included in the selection model regardless of their significance level.
 
 
+```{r}
 prob2 = mod2$fitted.values
 pscore2 = ifelse(Fatalities$breath == "yes", prob2,(1-prob2))
 weight2 = 1/pscore2
 mod2_new = lmer( frate ~ breath+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|state),data=Fatalities, weights=weight2)
-summary(mod2_new)
+summary(mod2_new)$coef %>% round(., 3) %>% kable() %>% kable_styling()
+```
+Likewise, after applying propensity score weighting, we still do not found significant treatment effect, as the factor level breathyes is not statistically significant at p = 0.05. Nevertheless, it is significant at p < 0.1, indicating potential effects that needs further investigation. Again, the covariates unemp and youngdrivers are statistically significant at p < 0.001.
+
+```{r}
+# balance analysis after propensity score estimation
+summary( lm(miles ~ breath, weight = weight2, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ breath, weight = weight2,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(beertax ~ breath, weight = weight2,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ breath, weight = weight2, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ breath, weight = weight2, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
 ```
 
-
-
-
+Note that the selection biases by `income` and `unemp` are not are reduced much after propensity score weighting, so there still exists substantial selection biases that may invalidate causal inferences.
 
 
 Model 3 (control: service)
@@ -286,104 +314,25 @@ pscore3 = ifelse(Fatalities$service == "yes", prob3,(1-prob3))
 weight3 = 1/pscore3
 mod3_new = lmer(frate~service+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+
                   rescale(miles)+(1|state),data=Fatalities, weights=weight3)
-summary(mod3_new)
+summary(mod3_new)$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
 ```
 
-
-
-
-<!-- Model 4 (control: service) including jail in model -->
-<!-- ```{r} -->
-<!-- mod4 = glm(service ~ jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles), family="binomial", data=Fatalities) -->
-<!-- prob4 = mod4$fitted.values -->
-<!-- pscore4 = ifelse(Fatalities$service == "yes", prob4,(1-prob4)) -->
-<!-- weight4 = 1/pscore4 -->
-<!-- mod4_new = lmer(frate~service+jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+rescale(miles)+(1|year),data=Fatalities, weights=weight4) -->
-<!-- summary(mod4_new) -->
-<!-- ``` -->
-
-
-
-<!-- Model 5 (control: jail) including service in model -->
-<!-- ```{r} -->
-<!-- mod5 = glm(jail ~ service+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+ -->
-<!--              rescale(miles), family="binomial", data=Fatalities) -->
-<!-- prob5 = mod5$fitted.values -->
-<!-- pscore5 = ifelse(Fatalities$service == "yes", prob5,(1-prob5)) -->
-<!-- weight5 = 1/pscore5 -->
-<!-- mod5_new = lmer(frate~service+jail+rescale(unemp)+rescale(income)+rescale(beertax)+rescale(youngdrivers)+ -->
-<!--                   rescale(miles)+(1|year),data=Fatalities, weights=weight5) -->
-<!-- summary(mod5_new) -->
-<!-- ``` -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-==========================================================================================
-                    Code used by TA in the discussion session
-==========================================================================================
-
+Using the same method, we do not found significant treatment effect, as the factor level serviceyes is not statistically significant at p = 0.05 Again, the covariates `unemp` and `youngdrivers` are statistically significant at p < 0.001.
 
 ```{r}
-dat = Fatalities[, c('fatal', 'beertax', 'jail', 'unemp', 'state', 'youngdrivers')]
-dat = dat[!is.na(dat$jail), ]
+# balance analysis before propensity score estimation
+summary( lm(miles ~ service, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ service,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(beertax ~ service, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ service, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ service, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
 
-model1 = lmer(fatal~beertax+jail+unemp+youngdrivers+(1|state),data=dat)
-summary(model1)
-```
-Can we say that jail cannot cause the reduction or increase of fatalities?
-We cannot get causal effect from an observational study directly because there exists selection bias
-
-Balance analysis
-```{r}
-model2 = lm(unemp~jail, data=dat)
-summary(model2)
-```
-
-To remove the selection bias, we can use propensity scores as weights in our model
-First, we need to build a selection model for estimating the propensity scores
-The propensity score is defined as the conditional probability given background variables
-```{r}
-Fatalities$service = relevel(Fatalities$service, ref="no")
-models = glm(service ~ beertax+unemp+youngdrivers, family="binomial", data=Fatalities)
-prob = models$fitted.values
-pscore = ifelse(Fatalities$service == "yes", prob,(1-prob))
-weight = 1/pscore
-
-model_new = lmer(frate~beertax+service+unemp+youngdrivers+(1|state),data=Fatalities, weights=weight)
-summary(model_new)
-anova(model_new)
+# balance analysis after propensity score estimation
+summary( lm(miles ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(income ~ service, weight = weight3,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(beertax ~ service, weight = weight3,data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(youngdrivers ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
+summary( lm(unemp ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 3) %>% kable() %>% kable_styling()
 ```
 
-
-
-
+It seems that the selection biases by `beertax` are effectively removed after propensity score weighting.
