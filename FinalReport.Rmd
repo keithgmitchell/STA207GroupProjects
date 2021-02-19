@@ -1,7 +1,7 @@
 ---
 title: Investigation of Policy and Legislative Actions for the Reduction of Fatal
   Traffic Incidents in Relation to Alcohol and Socio-Economic Factors
-author: "Keith Mitchell, ..."
+author: "Keith Mitchell, Pin-Hsun Mao, Seyoung Jung, Yige Luo"
 date: "2/12/2021"
 output: html_document
 ---
@@ -19,6 +19,7 @@ The following are some helpful research studies. The contents of these studies r
 - [Preventative Legislation for Drinking and Driving](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6876524/)
 
 
+---
 
 # Background
 Data was collected for 48 states in the United States, with Alaska and Hawaii being the two excluded states. The traffic fatality data was gathered from the US Department of Transportation Fatal Accident Reporting System (“Fatality Analysis Reporting System (FARS)” 2016) which is a census conducted nationwide to provide the public with data related to the traffic crashes. The data set contains 336 entries and 34 variables. The number of entries is 336, since there is an entry for each of the 48 states for the years 1982 through 1988 (“Fatalities” n.d.). 
@@ -31,8 +32,11 @@ Given the goal of the analysis is to help determine policy and legislative chang
 There is interest in further exploring variables related to the amount of travel in a region, measured in average miles per driver. In addition, other socio-economic factors like the amount of young drivers and income with regards to traffic incidents will be explored. Some of the response variables of interest are the fatality rate which can be obtained using the total vehicle fatalities after normalizing by population size. Similar methods can be used to explore the overall rates for the age groups 15-17, 18-20, and 21-24.
 
 
+---
 
 # Methods/Results
+
+---
 
 ## Descriptive Analysis
 
@@ -471,19 +475,19 @@ Likewise, we performed a balance analysis before the use of propensity scores.
 
 ```{r preBal2, echo = FALSE,warning=FALSE, results='asis'}
 cat("#### Balance analysis before estimating propensity scores:\n")
-cat("- jail vs. miles\n")
+cat("- breath vs. miles\n")
 summary( lm(miles ~ breath, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. income\n")
+cat("- breath vs. income\n")
 summary( lm(income ~ breath, data = Fatalities) ) $coefficients %>% round(., 5)%>% kable() %>% kable_styling()
 
-cat("- jail vs. beertax\n")
+cat("- breath vs. beertax\n")
 summary( lm(beertax ~ breath, data = Fatalities) )$coefficients %>% round(., 5)%>% kable() %>% kable_styling()
 
-cat("- jail vs. youngdrivers\n")
+cat("- breath vs. youngdrivers\n")
 summary( lm(youngdrivers ~ breath, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. unemployment\n")
+cat("- breath vs. unemployment\n")
 summary( lm(unemp ~ breath, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 ```
 
@@ -542,48 +546,104 @@ Using the same method, we do not found significant treatment effect, as the fact
 ```{r balance3, echo = FALSE,warning=FALSE, results='asis' }
 cat("#### Balance analysis before estimating propensity scores:\n")
 
-cat("- jail vs. miles\n")
+cat("- service vs. miles\n")
 summary( lm(miles ~ service, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. income\n")
+cat("- service vs. income\n")
 summary( lm(income ~ service,data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. beertax\n")
+cat("- service vs. beertax\n")
 summary( lm(beertax ~ service, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. youngdrivers\n")
+cat("- service vs. youngdrivers\n")
 summary( lm(youngdrivers ~ service, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. unemployment\n")
+cat("- service vs. unemployment\n")
 summary( lm(unemp ~ service, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
 cat("#### Balance analysis after estimating propensity scores:\n")
-cat("- jail vs. miles\n")
+cat("- servicel vs. miles\n")
 summary( lm(miles ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. income\n")
+cat("- service vs. income\n")
 summary( lm(income ~ service, weight = weight3,data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. beertax\n")
+cat("- service vs. beertax\n")
 summary( lm(beertax ~ service, weight = weight3,data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. youngdrivers\n")
+cat("- service vs. youngdrivers\n")
 summary( lm(youngdrivers ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 
-cat("- jail vs. unemployment\n")
+cat("- service vs. unemployment\n")
 summary( lm(unemp ~ service, weight = weight3, data = Fatalities) )$coefficients %>% round(., 5) %>% kable() %>% kable_styling()
 ```
 
 It seems that the selection biases by `beertax` are effectively removed after propensity score weighting.
 
+---
 
+# Discussion/Conclusions 
+
+In this study, we explored the relationships between the number of fatalities per 10,000 residents (`frate`) and several variables of interests, including household income, unemployment rate, beer taxes, average miles driven per person, proportions of young drivers aged 15-24. We tested hypotheses whether enacting punishment and/or preliminary alcohol tests would cause a decrease in the fatality rate using linear mixed models while accounting for selection biases by the propensity score weighting scheme (Olmos & Govindasamy, 2015). We found no evidence that imposing mandatory jail sentences or community service scause any change in fatality rate. While having a preliminary alcohol breath test tends to be associated with lower fatality rate, the causality turned only significant at the 0.1 level and therefore remains inconclusive. Nevertheless, since the selection biases were not effectively removed after the propensity score weighting, the causal relationship between breath tests and fatality may be masked by the remaining selection biases, and therefore further research needs to be done on the effects of incorporating breath tests.
+
+Besides the three binary variables discussed above, we also discovered strong effects of young drivers and unemployment on fatality rate, which are consistently revealed by all three models. When unemployment rates are high, it is natural that people tend to reduce their driving activities and we found significant associations between high unemployment and low fatality rate. In addition, higher proportions of young drivers significantly associated with higher fatality rate, which justifies the increase of minimum driving age in many states (data not shown). In fact, when we further looked into the effects of driving ages on fatalities, it could be concluded that there is an over-representation of young drivers (age 15-24) in traffic fatalities than expected by chance. Specifically, when two sample proportion tests (with alternative “greater”) were performed on all 48 states across 7 years (336 tests in total),  Benjamin-Hochberg corrected p-values are all below 0.01, meaning that one can confidently reject the null hypotheses that young drivers are not overrepresented than mature drivers for all tests. 
+
+```{r addMoreVar, echo=FALSE, warning=FALSE}
+# fatalities caused by young drivers aged 15-24
+Fatalities$fatal_young <- 
+  Fatalities$fatal1517 + Fatalities$fatal1820 + Fatalities$fatal2124
+
+# fatalities caused by drivers aged 25+
+Fatalities$fatal_non_young <- 
+  Fatalities$fatal - Fatalities$fatal_young
+
+# population demography of young drivers aged 15-24
+Fatalities$young_pop <- 
+  Fatalities$pop1517 + Fatalities$pop1820 + Fatalities$pop2124
+
+# population demography of non-young drivers (age 25+)
+Fatalities$non_young_pop <- Fatalities$pop - Fatalities$young_pop 
+
+
+# proportions of state population who are young (age 15-24)
+Fatalities$young <- Fatalities$young_pop / Fatalities$pop
+
+```
+
+```{r ProportionTests, echo=FALSE, warning=FALSE}
+DriverDemo <- 
+  Fatalities %>% 
+  select(fatal_young, fatal, young)
+
+# raw p-values of proportion tests
+pvals <- 
+sapply(1:336, function(i) prop.test(DriverDemo[i,1],DriverDemo[i,2], DriverDemo[i,3], alternative = "greater" )$p.value
+)
+
+# adjusted p values by Benjamin-Hochberg
+max (p.adjust(pvals, "BH") )
+
+```
+Even the largest p-value is below 0.01 significance level after Benjamin-Hochberg multiple test correction, we conclude that there is an over-representation of young drivers (age 15-24) in traffic fatalities than expected by chance.
+
+---
 
 # Acknowledgements
 
 Dr. Shizhe Chen and Yejiong Zhu for their course materials and instruction for data analysis techniques and R code. 
 
+---
+
+# Author's Contribution
+
+[Github Commits](https://github.com/keithgmitchell/STA207GroupProjects/commits/main)
+K.M: Intro, Background, Citation, Model Explanation, Final Report Formatting
+Y.L: Building and refining Model for causal inference, writing discussion
+S.J: Building and refining Model for causal inference, writing inferential analysis
+P.M:  Descriptive analysis
 
 
+---
 
 # Supplementary Material
 
@@ -592,6 +652,7 @@ Github link for code is provided to reproduce visualizations and statistical ana
 
 
 
+---
 
 # References
 
