@@ -32,6 +32,14 @@ summary(covid)
 ```{r echo=TRUE, eval=TRUE}
 # https://ourworldindata.org/covid-face-coverings
 
+# facial_coverings:
+# 0: No policy
+# 1: Recommended
+# 2: Required in some specified shared/public spaces outside the home with other people present, or some situations when social distancing not possible
+# 3: Required in all shared/public spaces outside the home with other people present or all situations when social distancing not possible
+# 4: Required outside the home at all times regardless of location or presence of other people
+
+
 face_covering <- read.csv("face-covering-policies-covid.csv")
 face_covering$Date <- as.Date(face_covering$Date)
 summary(face_covering)
