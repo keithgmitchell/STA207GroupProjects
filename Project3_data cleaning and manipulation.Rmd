@@ -1,0 +1,486 @@
+---
+title: "Project 3 Description"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Overview
+
+This document contains instructions on Project 3 for STA 207 in Winter 2021. This document is made with `R markdown`. The `rmd` file to generate this document is available on the course website. 
+
+# Background
+
+
+
+## WHO COVID-19 data
+
+We will do an EDA for the WHO COVID-19 data. You can take a look at the [weekly WHO COVID-19 update](https://www.who.int/docs/default-source/coronaviruse/situation-reports/20200921-weekly-epi-update-6.pdf?sfvrsn=d9cf9496_6&download=true) for reference.
+
+
+```{r echo=TRUE, eval=TRUE}
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(gridExtra)
+covid <- read_csv("https://covid19.who.int/WHO-COVID-19-global-data.csv")
+```
+
+```{r echo=TRUE, eval=TRUE}
+summary(covid)
+```
+
+```{r echo=TRUE, eval=TRUE}
+# https://ourworldindata.org/covid-face-coverings
+
+face_covering <- read.csv("face-covering-policies-covid.csv")
+face_covering$Date <- as.Date(face_covering$Date)
+summary(face_covering)
+```
+
+```{r echo=TRUE, eval=TRUE}
+# covid: Date ranges from 2020-01-03 to 2021-03-03
+# face_covering: Date ranges from 2020-01-01 to 2021-03-02
+
+# Subset so the datasets contain date ranging from 2020-01-03 to 2021-03-02
+
+covid %<>% filter (Date_reported >= as.Date("2020-01-03") & Date_reported <= as.Date("2021-03-02"))
+face_covering %<>% filter (Date >= as.Date("2020-01-03") & Date <= as.Date("2021-03-02"))
+```
+
+
+```{r echo=TRUE, eval=TRUE}
+# Change country names to have the same values from country names in face_covering
+covid$Country[covid$Country == "Republic of Korea"] <- "South Korea"
+covid$Country[covid$Country == "Russian Federation"] <- "Russia"
+covid$Country[covid$Country == "The United Kingdom"] <- "United Kingdom"
+covid$Country[covid$Country == "United States of America"] <- "United States"
+```
+
+
+```{r echo=TRUE, eval=TRUE}
+# GDP of 25 countries
+# https://www.investopedia.com/insights/worlds-top-economies/
+
+
+covid_GDP25_countries <- covid[grepl("(United States|China|Japan|Germany|India|United Kingdom|France|Italy|Brazil|Canada|Russia|South Korea|Australia|Spain|Mexico|Indonesia|Netherlands|Saudi Arabia|Turkey|Switzerland|Poland|Thailand|Sweden|Belgium|Nigeria)", covid$Country),]
+
+covid_GDP25_countries %<>% filter (Country != "United States Virgin Islands") # drop United States Virgin Islands
+
+
+face_covering_GDP25_countries <- face_covering[grepl("(United States|China|Japan|Germany|India|United Kingdom|France|Italy|Brazil|Canada|Russia|South Korea|Australia|Spain|Mexico|Indonesia|Netherlands|Saudi Arabia|Turkey|Switzerland|Poland|Thailand|Sweden|Belgium|Nigeria)", face_covering$Entity),]
+
+face_covering_GDP25_countries %<>% filter (Entity != "United States Virgin Islands") # drop United States Virgin Islands
+```
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+# The total sum of facial_coverings by country 
+# The lower the value, the less restriction (or none) the country has
+
+aggregate(face_covering_GDP25_countries$facial_coverings, by=list(Countries=face_covering_GDP25_countries$Entity), FUN=sum) 
+```
+
+```{r echo=TRUE, eval=TRUE, message=FALSE}
+# The total number of days that each country didn't have restrictions on facial covering
+# Notice that Sweden didn't have facial covering related policy for 370 days
+
+
+face_covering_GDP25_countries$facial_coverings <- as.factor(face_covering_GDP25_countries$facial_coverings)
+
+country_by_policy <- face_covering_GDP25_countries %>%
+    group_by(Entity, facial_coverings) %>%
+    summarise(count=n())
+
+country_by_policy[country_by_policy$facial_coverings=="0", ]
+```
+
+
+
+```{r echo=TRUE, eval=TRUE}
+# Not all countries have the same number of observations in the face-covering dataset
+
+face_covering_GDP25_countries %>%
+    group_by(Entity) %>%
+    summarise(count=n())
+
+```
+
+
+```{r echo=TRUE, eval=TRUE}
+# Whereas, all the countries from the covid dataset has 425 observations. 
+
+covid_GDP25_countries %>%
+    group_by(Country) %>%
+    summarise(count=n())
+
+```
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+# Left join the two datasets based on countries and date
+joined_data <- left_join(covid_GDP25_countries, face_covering_GDP25_countries, by = c("Country" = "Entity", "Date_reported" = "Date"))
+
+
+# Drop "Code" variable as it is unnecessary to keep
+joined_data <- subset(joined_data, select = -Code)
+
+```
+
+
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+table(joined_data$WHO_region) / length(unique(joined_data$Date_reported))
+
+# How many countries belong to each WHO region
+
+# EMRO: Eastern Mediterranean Region
+# EURO: European Region
+# AFRO: African Region
+# WPRO: Western Pacific Region
+# AMRO: Americans Region
+# SEARO: South-East Asian Region
+                                                          
+```
+
+
+New_cases
+```{r echo=TRUE, eval=TRUE}
+new_cases_neg <- which(joined_data$New_cases < 0)
+
+new_cases_neg_matrix <- vector("list",5)
+for (i in 1:length(which(joined_data$New_cases < 0))) {
+    new_cases_neg_matrix[[i]] <-joined_data[c(new_cases_neg[i]-1, new_cases_neg[i], new_cases_neg[i]+1), c(1,3,5,6)]
+}
+
+do.call(rbind,new_cases_neg_matrix)
+
+# When the New_cases has negative values, the Cumulative_cases decreases by that amount (Compare the previous/next day)
+```
+
+New_deaths
+```{r echo=TRUE, eval=TRUE}
+new_deaths_neg <- which(joined_data$New_deaths < 0)
+
+new_deaths_neg_matrix <- vector("list",5)
+for (i in 1:length(which(joined_data$New_deaths < 0))) {
+    new_deaths_neg_matrix[[i]] <-joined_data[c(new_deaths_neg[i]-1, new_deaths_neg[i], new_deaths_neg[i]+1), c(1,3,7,8)]
+}
+
+do.call(rbind,new_deaths_neg_matrix)
+
+# When the New_deaths has negative values, the Cumulative_deaths decreases by that amount (Compare the previous/next day)
+```
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+Australia_new_cases <- joined_data %>% filter( Country=="Australia" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Australia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Belgium_new_cases <- joined_data %>% filter( Country=="Belgium" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Belgium") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Brazil_new_cases <- joined_data %>% filter( Country=="Brazil" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Brazil") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Canada_new_cases <- joined_data %>% filter( Country=="Canada" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Canada") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+China_new_cases <- joined_data %>% filter( Country=="China" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("China") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+France_new_cases <- joined_data %>% filter( Country=="France" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("France") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Germany_new_cases <- joined_data %>% filter( Country=="Germany" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Germany") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+India_new_cases <- joined_data %>% filter( Country=="India" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("India") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Indonesia_new_cases <- joined_data %>% filter( Country=="Indonesia" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Indonesia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Italy_new_cases <- joined_data %>% filter( Country=="Italy" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Italy") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Japan_new_cases <- joined_data %>% filter( Country=="Japan" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Japan") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Mexico_new_cases <- joined_data %>% filter( Country=="Mexico" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Mexico") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Netherlands_new_cases <- joined_data %>% filter( Country=="Netherlands" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Netherlands") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Nigeria_new_cases <- joined_data %>% filter( Country=="Nigeria" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Nigeria") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Poland_new_cases <- joined_data %>% filter( Country=="Poland" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Poland") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+SouthKorea_new_cases <- joined_data %>% filter( Country=="South Korea" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("South Korea") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Russia_new_cases <- joined_data %>% filter( Country=="Russia" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Russia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+SaudiArabia_new_cases <- joined_data %>% filter( Country=="Saudi Arabia" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Saudi Arabia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Spain_new_cases <- joined_data %>% filter( Country=="Spain" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Spain") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Sweden_new_cases <- joined_data %>% filter( Country=="Sweden" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Sweden") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Switzerland_new_cases <- joined_data %>% filter( Country=="Switzerland" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Switzerland") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Thailand_new_cases <- joined_data %>% filter( Country=="Thailand" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Thailand") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+UnitedKingdom_new_cases <- joined_data %>% filter( Country=="United Kingdom" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("United Kingdom") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Turkey_new_cases <- joined_data %>% filter( Country=="Turkey" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("Turkey") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+UnitedStates_new_cases <- joined_data %>% filter( Country=="United States" ) %>% 
+  ggplot( aes(x=Date_reported, y=New_cases)) + geom_line() + xlab("United States") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+```
+
+```{r echo=TRUE, eval=TRUE}
+grid.arrange(Australia_new_cases, Belgium_new_cases, Brazil_new_cases, Canada_new_cases, nrow = 2)
+
+grid.arrange(China_new_cases, France_new_cases, Germany_new_cases, India_new_cases, nrow = 2)
+
+grid.arrange(Indonesia_new_cases, Italy_new_cases, Japan_new_cases, Mexico_new_cases, nrow = 2)
+
+grid.arrange(Netherlands_new_cases, Nigeria_new_cases, Poland_new_cases, SouthKorea_new_cases, nrow = 2)
+
+grid.arrange(Russia_new_cases, SaudiArabia_new_cases, Spain_new_cases, Sweden_new_cases, nrow = 2)
+
+grid.arrange(Switzerland_new_cases, Thailand_new_cases, UnitedKingdom_new_cases, Turkey_new_cases, UnitedStates_new_cases,nrow = 3)
+```
+
+
+
+
+
+How face covering-related policy changes over time (need some additional work - see plots below)
+```{r echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
+Australia_facial_coverings <- joined_data %>% filter( Country=="Australia" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Australia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Belgium_facial_coverings <- joined_data %>% filter( Country=="Belgium" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Belgium") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Brazil_facial_coverings <- joined_data %>% filter( Country=="Brazil" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Brazil") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Canada_facial_coverings <- joined_data %>% filter( Country=="Canada" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Canada") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+China_facial_coverings <- joined_data %>% filter( Country=="China" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("China") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+France_facial_coverings <- joined_data %>% filter( Country=="France" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("France") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Germany_facial_coverings <- joined_data %>% filter( Country=="Germany" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Germany") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+India_facial_coverings <- joined_data %>% filter( Country=="India" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("India") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Indonesia_facial_coverings <- joined_data %>% filter( Country=="Indonesia" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Indonesia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Italy_facial_coverings <- joined_data %>% filter( Country=="Italy" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Italy") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Japan_facial_coverings <- joined_data %>% filter( Country=="Japan" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Japan") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Mexico_facial_coverings <- joined_data %>% filter( Country=="Mexico" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Mexico") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Netherlands_facial_coverings <- joined_data %>% filter( Country=="Netherlands" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Netherlands") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Nigeria_facial_coverings <- joined_data %>% filter( Country=="Nigeria" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Nigeria") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Poland_facial_coverings <- joined_data %>% filter( Country=="Poland" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Poland") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+SouthKorea_facial_coverings <- joined_data %>% filter( Country=="South Korea" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("South Korea") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Russia_facial_coverings <- joined_data %>% filter( Country=="Russia" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Russia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+SaudiArabia_facial_coverings <- joined_data %>% filter( Country=="Saudi Arabia" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Saudi Arabia") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Spain_facial_coverings <- joined_data %>% filter( Country=="Spain" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Spain") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Sweden_facial_coverings <- joined_data %>% filter( Country=="Sweden" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Sweden") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Switzerland_facial_coverings <- joined_data %>% filter( Country=="Switzerland" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Switzerland") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Thailand_facial_coverings <- joined_data %>% filter( Country=="Thailand" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Thailand") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+UnitedKingdom_facial_coverings <- joined_data %>% filter( Country=="United Kingdom" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("United Kingdom") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+Turkey_facial_coverings <- joined_data %>% filter( Country=="Turkey" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("Turkey") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+
+UnitedStates_facial_coverings <- joined_data %>% filter( Country=="United States" ) %>% 
+  ggplot( aes(x=Date_reported, y=facial_coverings)) + geom_line() + xlab("United States") + ylab("") +
+  scale_x_date(date_labels = "%b %d")
+```
+
+
+Overlapped periods (e.g. Australia: from mid-November to early-January, two horizontal lines exist) indicate they switched from one policy to another, and back to the original policy 
+```{r echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
+grid.arrange(Australia_facial_coverings, Belgium_facial_coverings, Brazil_facial_coverings, Canada_facial_coverings, nrow = 2)
+
+grid.arrange(China_facial_coverings, France_facial_coverings, Germany_facial_coverings, India_facial_coverings, nrow = 2)
+
+grid.arrange(Indonesia_facial_coverings, Italy_facial_coverings, Japan_facial_coverings, Mexico_facial_coverings, nrow = 2)
+
+grid.arrange(Netherlands_facial_coverings, Nigeria_facial_coverings, Poland_facial_coverings, SouthKorea_facial_coverings, nrow = 2)
+
+grid.arrange(Russia_facial_coverings, SaudiArabia_facial_coverings, Spain_facial_coverings, Sweden_facial_coverings, nrow = 2)
+
+grid.arrange(Switzerland_facial_coverings, Thailand_facial_coverings, UnitedKingdom_facial_coverings, Turkey_facial_coverings, UnitedStates_facial_coverings,nrow = 3)
+```
+
+
+
+
+
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+
+
+
+#missing_countries_face_covering <- c("American Samoa", "Anguilla", "Antigua and Barbuda", "Armenia", "Bonaire", "British Virgin Islands", "Cayman Islands", "Cook Islands", "Curaçao", "Democratic People's Republic of Korea", "Equatorial Guinea", "Falkland Islands (Malvinas)", "French Guiana", "French Polynesia", "Gibraltar", "Grenada", "Guadeloupe", "Guernsey", "Guinea-Bissau", "Holy See", "Isle of Man", "Jersey", "Liechtenstein", "Madagascar", "Maldives", "Marshall Islands", "Martinique", "Mayotte", "Micronesia (Federated States of)", "Montenegro", "Montserrat", "Nauru", "New Caledonia", "Niue", "North Macedonia", "Northern Mariana Islands (Commonwealth of the)", "occupied Palestinian territory, including east Jerusalem", "Other", "Palau", "Pitcairn Islands", "Réunion", "Saba", "Saint Barthélemy", "Saint Helena", "Saint Kitts and Nevis", "Saint Lucia", "Saint Martin", "Saint Pierre and Miquelon", "Saint Vincent and the Grenadines", "Samoa", "Sao Tome and Principe", "Sint Eustatius", "Sint Maarten", "Tokelau", "Turks and Caicos Islands", "Tuvalu", "Wallis and Futuna")
+
+
+#missing_countries_covid <- c("Hong Kong", "Macao", "Palestine", "Taiwan")
+```
+
+
+
+
+
+This data set is maintained by WHO and updated constantly. The first task for you is to understand this data set, e.g., the meanings of the variables and their values. To this end, you can make use of your preferred search engine, or read the documentation for this data set. 
+
+In this project, you are a team of conscientious statisticians, who wish to help the general public understand the ongoing pandemic. 
+
+
+
+## Suggested outline 
+
+The following list provides one potential structure of the data analysis report. As this is the final project, the following suggestions are intended to provide one viable route for your project while leaving you as much freedom as possible. 
+
+***
+
+0. Before writing your analysis report, you may want to explore this data set and read about the coronavirus to generate the hypothesis or question to be answered in this report, i.e., the question(s) of interest. You can be creative on this question so long as it meets two conditions.
+    a. This question might be meaningful in real-world. 
+    b. A method discussed in this course is employed in solving this question. 
+
+***
+
+
+1. Introduce the data set and the questions of interest. 
+
+2. Review the background of the coronavirus. 
+
+3. Explore this dataset and generate summary statistics that you find informative, and explain your findings. <span style="color:red"> The summary statistics should include at least time, number of cases, number of death, case-mortality rate.</span>
+
+4.  Propose an appropriate model to answer the questions of interest. 
+    a. Explain your notation. 
+    b. State assumptions for your model. 
+    c. Explain why your model is appropriate for this task. 
+
+
+5.  Fit the proposed model in (4) and explain your results. 
+
+6.  <span style="color:red"> Discuss whether you can make any causal inference in this analysis. </span>
+
+7.  Conduct model diagnostics and/or sensitivity analysis. 
+
+8. Conclude your analysis with an discussion of your findings and caveats of your approach. 
+
+
+
+
