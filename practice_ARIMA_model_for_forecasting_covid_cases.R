@@ -1,0 +1,165 @@
+# pratice ts from this [Github](https://github.com/navido89/Time-Series-Analysis-ARIMA-Model-Covid19-Predictions)
+
+# We use supressMessages so we won't display the warning message. 
+suppressMessages(library(tidyverse))
+suppressMessages(library(zoo)) # needed for zoo()
+suppressMessages(library(tseries)) # needed for adf.test()
+suppressMessages(library(forecast))
+suppressMessages(library(lubridate))
+
+covid <- read.csv("WHO-COVID-19-global-data.csv", check.names = FALSE)
+class(covid$`ï»¿Date_reported`)
+
+# getting covid data for India
+india.df <- subset( covid, Country == "India" )[, c(1,5) ]
+# fix colnames
+colnames(india.df) <- c( "date", "case" )
+# convert `date` to "Date" object
+india.df$date <- as.Date( india.df$date )
+
+# convert data to "zoo" object
+india.ts <- zoo(india.df$case,  india.df$date ) 
+summary(india.ts)
+plot(india.ts)
+
+# the date when face covering is recommended/required by government
+policy.start.date <- as.Date( format("2020-04-01", format = "%Y-%m-%d") )
+
+
+# a reasonable length of forecasting should not exceed the length of 
+# period when no face covering is recommended/required
+
+# length of days to forecast the number of new cases per day
+forcast.length <-  sum(india.df$date <= policy.start.date)
+
+# length of days when face covering policy is in effect
+# this serves the maximum possible length of dates to forecast
+policy.length <- sum(india.df$date > policy.start.date)
+
+
+# subset of data when no face covering
+india.sub.df <- india.df[ india.df$date <= policy.start.date, ]
+# convert to "zoo" object
+india.sub.ts <- zoo(india.sub.df$case,  india.sub.df$date ) 
+
+# subset of data (of length forcast.length) immediate after policy change
+india.real.df <- 
+  india.df[ india.df$date > policy.start.date & 
+              india.df$date <= (policy.start.date + forcast.length), ]
+
+# subset of data when face covering recommended/required
+india.real.df2 <- india.df[ india.df$date > policy.start.date , ]
+
+
+# ensuring stationary assumption by differencing the data
+# stationary_data <- diff( india.sub.ts )
+stationary_data <- diff ( diff( india.sub.ts ) )
+plot( stationary_data )
+
+# To check if it's stationary we conduct a quantitative test.
+# We use the Augmented Dickey-Fuller Test.
+
+# H_0 = The null hypothesis for this test is that there is a unit root.
+# H_A = The alternative hypothesis is that the time series is 
+# stationary (or trend-stationary).
+adf.test( as.matrix(stationary_data) ) 
+
+# We select a significance level of 0.05 and since our p-value is 0.01
+# and smaller then 0.05, we come to the conclusion to reject the null
+# hypothesis. In other words our data is stationary.
+
+# We use the Auto Correlation Graph
+
+# First we have a look at our acf graph when our data isn't stationary.
+acf( india.sub.ts )
+
+# Here we see that our values are all exceeding the blue line. The goal 
+# is to have the values under the blue line and they should be inverted 
+# as well.
+
+# To select the p and q values we select the number before the first 
+# inverted line.
+acf( stationary_data )
+pacf( stationary_data )
+
+# arima has a auto.arima function which gives us the ideal arima model 
+# based on our data.
+arima_funct <- auto.arima( india.sub.ts )
+arima_funct
+
+# the parameter d is 2 from the auto.arima, which means two diff()
+# should be used to transform the `india.sub.ts`
+
+# lets use the auto.arima function to forecast the length of period of
+# no face covering (for India it's 90 days)
+
+forecast1 <- forecast( arima_funct, h = length( india.sub.ts ) )
+forecast1.df <- as.data.frame( forecast1 )
+
+# predicted additional cumulative cases over the next 90 days
+pred_cum_cases <- 
+  c( round( sum( forecast1.df$`Lo 95` ), 0 ), 
+     round( sum( forecast1.df$`Point Forecast` ), 0),
+     round( sum( forecast1.df$`Hi 95` ),0 ) ) 
+
+pred_cum_cases
+
+# actual accumualted cases over the next 90 days
+round( sum( india.real.df$case ), 0 )
+
+# quick-N-dirty way to plot things
+# plot( forecast1, xaxt = "n" )
+# axis(1, at = axTicks(1), labels = as.Date( axTicks(1) ),
+#      cex.axis = 0.7, las = 2 )
+
+# A pretty way to plot things: DIY a plotting function
+quick_plot <- function( arima.obj, train.df, predict.df, country="India" ){
+  
+  tt <- capture.output( print( arima_funct) )[2] # ARIMA model 
+  
+  forecast <- forecast( arima.obj, h = nrow( predict.df ) )
+  
+  df <- 
+    as.data.frame( forecast ) %>% 
+    rownames_to_column( var = "date" ) %>% 
+    mutate( date = date %>% as.integer() %>% as.Date() )
+  
+  p <- 
+    rbind( train.df, predict.df ) %>% 
+    ggplot( aes(date, case), show.legend = FALSE )+
+    geom_ribbon( aes( x = date, ymin = `Lo 95`, ymax = `Hi 95` ), data = df,
+                 inherit.aes = FALSE, fill = "lightsteelblue2" ) +
+    geom_ribbon( aes( x = date, ymin = `Lo 80`, ymax = `Hi 80` ), data = df,
+                 inherit.aes = FALSE, fill = "lightsteelblue3" ) +
+    geom_line(  )+
+    geom_line( aes( date, `Point Forecast`), data = df, size = 1, color = "purple" ) +
+    labs( title = paste( country, tt, sep = ": " ) ) +
+    scale_x_date( date_breaks = "1 month", date_labels =  "%b %Y" ) +
+    theme( axis.text.x = element_text( angle = 60, hjust = 1 ) )
+  
+  print(p)
+}
+
+quick_plot( forecast1, india.sub.df, india.real.df )
+
+# lets use the auto.arima function to forecast the rest of period until 
+# Feb 18, 2021, as if no action taken on face covering (for india it's
+# 323 days)
+
+forecast2 <- forecast( object = arima_funct, h = policy.length )
+forecast2.df <- as.data.frame( forecast2 )
+
+# predicted additional cumulative cases over the next 90 days
+pred_cum_cases2 <- 
+  c( round( sum( forecast2.df$`Lo 95` ), 0 ), 
+     round( sum( forecast2.df$`Point Forecast` ), 0),
+     round( sum( forecast2.df$`Hi 95` ),0 ) ) 
+
+pred_cum_cases2
+
+# actual accumualted cases over the next 323 days
+round( sum( india.real.df2$case ), 0 )
+
+quick_plot( forecast2, india.sub.df, india.real.df2 )
+
+
