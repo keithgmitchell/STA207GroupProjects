@@ -185,7 +185,7 @@ covid_GDP25_countries %>%
 # Left join the two datasets based on countries and date
 joined_data <- left_join(covid_GDP25_countries, face_covering_GDP25_countries, by = c("Country" = "Entity", "Date_reported" = "Date"))
 
-
+write.csv(joined_data, "joined_mask_and_case.csv")
 # Drop "Code" variable as it is unnecessary to keep
 joined_data <- subset(joined_data, select = -Code)
 

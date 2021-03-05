@@ -1,0 +1,123 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# pratice ts from this [Github](https://github.com/navido89/Time-Series-Analysis-ARIMA-Model-Covid19-Predictions)
+
+# We use supressMessages so we won't display the warning message. 
+suppressMessages(library(tidyverse))
+suppressMessages(library(zoo)) # needed for zoo()
+suppressMessages(library(tseries)) # needed for adf.test()
+suppressMessages(library(forecast))
+suppressMessages(library(lubridate))
+install.packages('fpp2')
+library(forecast)
+library(zoo)
+```
+
+```{r}
+# getting covid data for the 25 countries
+#joined_data is from EDA part
+country.df = joined_data[ , c(1,3,5,9)]
+```
+
+
+
+```{r}
+# A pretty way to plot things: DIY a plotting function
+quick_plot <- function( arima.obj, train.df, predict.df, country= 'India' ){
+  
+  tt <- capture.output( print( arima.obj) )[2] # ARIMA model 
+  
+  forecast <- forecast( arima.obj, h = nrow( train.df ) )
+  
+  df <- 
+    as.data.frame( forecast ) %>% 
+    rownames_to_column( var = "Date_reported" ) %>% 
+    mutate( Date_reported = Date_reported %>% as.integer() %>% as.Date() )
+  
+  p <- 
+    rbind( train.df, predict.df ) %>% 
+    ggplot( aes(Date_reported, New_cases), show.legend = FALSE )+
+    geom_ribbon( aes( x = Date_reported, ymin = `Lo 95`, ymax = `Hi 95` ), data = df,
+                 inherit.aes = FALSE, fill = "lightsteelblue2" ) +
+    geom_ribbon( aes( x = Date_reported, ymin = `Lo 80`, ymax = `Hi 80` ), data = df,
+                 inherit.aes = FALSE, fill = "lightsteelblue3" ) +
+    geom_line(  )+
+    geom_line( aes( Date_reported, `Point Forecast`), data = df, size = 1, color = "purple" ) +
+    labs( title = paste( country, tt, sep = ": " ) ) +
+    scale_x_date( date_breaks = "1 month", date_labels =  "%b %Y" ) +
+    theme( axis.text.x = element_text( angle = 60, hjust = 1 ) )
+  
+  return(p)
+}
+```
+
+
+
+
+```{r}
+##ARIMA models for each country
+##Japan has no face covering requirement, so we drop it.
+pred_cum_cases = list()
+actual_case = list()
+country_list = unique(country.df$Country)
+func_a = function(country_name)
+  {print(country_name)
+  country_df <- subset(country.df, Country == country_name)
+  country_df$Date_reported <- as.Date(country_df$Date_reported )
+  country_sub = subset( country_df, facial_coverings == 0 |facial_coverings == 1)
+  print(length(country_sub))
+  country_sub_ts = zoo(country_sub$New_cases,country_sub$Date_reported ) 
+  country_real_df2 = subset( country_df, facial_coverings != 0 & facial_coverings != 1)
+  print(length(country_real_df2))
+  auto.arima( country_sub_ts )
+  print(length( country_sub_ts))
+  forecast1 <- forecast( auto.arima( country_sub_ts), h = length( country_sub_ts) )
+  forecast1.df <- as.data.frame( forecast1 ) %>% 
+    rownames_to_column( var = "Date_reported" ) %>% 
+    mutate( Date_reported = Date_reported %>% as.integer() %>% as.Date() )
+  print(colnames(forecast1.df))
+  pred_cum_cases[[country_name]] <<- round( sum( forecast1.df$'Point Forecast' ), 0)
+  policy_start_date =min(forecast1.df$Date_reported)
+  print(policy_start_date)
+  actual_a = subset(country_real_df2, Date_reported <= max(forecast1.df$Date_reported))
+  print(policy_start_date+length(country_sub))
+  actual_case[[country_name]] <<- round( sum( actual_a$New_cases ), 0 )
+  return(quick_plot( auto.arima( country_sub_ts), country_sub, country_real_df2, country_name))
+}
+for (country_name in country_list) {
+  if (country_name != 'Japan')
+  print(func_a(country_name))
+  
+}
+```
+
+```{r}
+#Prediction cumulative cases for each country
+pred_cum_cases
+##Actual cumulative cases for each country
+actual_case
+```
+
+
+
+
+
+
