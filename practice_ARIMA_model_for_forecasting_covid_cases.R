@@ -7,7 +7,7 @@ suppressMessages(library(tseries)) # needed for adf.test()
 suppressMessages(library(forecast))
 suppressMessages(library(lubridate))
 
-covid <- read.csv("WHO-COVID-19-global-data.csv", check.names = FALSE)
+covid <- read.csv("../Data/WHO-COVID-19-global-data.csv", check.names = FALSE)
 class(covid$`ï»¿Date_reported`)
 
 # getting covid data for India

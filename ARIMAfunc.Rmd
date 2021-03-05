@@ -208,6 +208,7 @@ countries <- unique(covid$Country)
 test = joined_data %>% filter(Country == countries[3]) %>% filter(facial_coverings != "0")
 test[c(1)]
 
+
 for(i in 1:length(countries)) {
   (joined_data %>% filter(Country == countries[i]) %>% filter(as.character(facial_coverings) != "0") %>% head(1))$Date_reported - 1
 }
