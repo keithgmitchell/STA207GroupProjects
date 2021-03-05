@@ -90,12 +90,16 @@ func_a = function(country_name)
   auto.arima( country_sub_ts )
   print(length( country_sub_ts))
   forecast1 <- forecast( auto.arima( country_sub_ts), h = length( country_sub_ts) )
-  forecast1.df <- as.data.frame( forecast1 )
-  pred_cum_cases[[country_name]] <<- 
-  c( round( sum( forecast1.df$`Lo 95` ), 0 ), 
-     round( sum( forecast1.df$`Point Forecast` ), 0),
-     round( sum( forecast1.df$`Hi 95` ),0 ) ) 
-  actual_case[[country_name]] <<- round( sum( country_real_df2$New_cases ), 0 )
+  forecast1.df <- as.data.frame( forecast1 ) %>% 
+    rownames_to_column( var = "Date_reported" ) %>% 
+    mutate( Date_reported = Date_reported %>% as.integer() %>% as.Date() )
+  print(colnames(forecast1.df))
+  pred_cum_cases[[country_name]] <<- round( sum( forecast1.df$'Point Forecast' ), 0)
+  policy_start_date =min(forecast1.df$Date_reported)
+  print(policy_start_date)
+  actual_a = subset(country_real_df2, Date_reported <= max(forecast1.df$Date_reported))
+  print(policy_start_date+length(country_sub))
+  actual_case[[country_name]] <<- round( sum( actual_a$New_cases ), 0 )
   return(quick_plot( auto.arima( country_sub_ts), country_sub, country_real_df2, country_name))
 }
 for (country_name in country_list) {
