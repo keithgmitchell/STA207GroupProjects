@@ -17,11 +17,12 @@ This document contains instructions on Project 3 for STA 207 in Winter 2021. Thi
 We will do an EDA for the WHO COVID-19 data. You can take a look at the [weekly WHO COVID-19 update](https://www.who.int/docs/default-source/coronaviruse/situation-reports/20200921-weekly-epi-update-6.pdf?sfvrsn=d9cf9496_6&download=true) for reference.
 
 
-```{r echo=TRUE, eval=TRUE}
+```{r echo=TRUE, eval=TRUE, message=FALSE}
 library(tidyverse)
 library(dplyr)
 library(magrittr)
 library(gridExtra)
+library(zoo)
 covid <- read_csv("https://covid19.who.int/WHO-COVID-19-global-data.csv")
 ```
 
@@ -80,6 +81,40 @@ face_covering_GDP25_countries <- face_covering[grepl("(United States|China|Japan
 face_covering_GDP25_countries %<>% filter (Entity != "United States Virgin Islands") # drop United States Virgin Islands
 ```
 
+```{r echo=TRUE, eval=TRUE}
+joined_data$Country_code <- as.factor(joined_data$Country_code)
+joined_data$Country <- as.factor(joined_data$Country)
+joined_data$WHO_region <- as.factor(joined_data$WHO_region)
+summary(joined_data)
+```
+
+```{r echo=TRUE, eval=TRUE}
+# The total sum of cases by country 
+
+summary_data <- aggregate(list("Confirmed Cases"=joined_data$New_cases, Deaths=joined_data$New_deaths), by=list(Countries=joined_data$Country), FUN=sum) 
+
+
+countries <- unique(joined_data$Country)
+Mortality.Rate <- 0
+
+
+
+for(i in 1:length(unique(countries))) {
+  Mortality.Rate[i] <- round(summary_data[i, 3] / summary_data[i, 2], 4)
+}
+
+(summary_data <- cbind(summary_data, Mortality.Rate))
+
+
+mortality_plot <- ggplot(summary_data, aes(x=Countries, y= Mortality.Rate)) + 
+  geom_jitter() +
+  theme(axis.text.x = element_text(angle = 90))
+
+mortality_plot
+```
+
+
+
 
 
 
@@ -101,7 +136,25 @@ country_by_policy <- face_covering_GDP25_countries %>%
     group_by(Entity, facial_coverings) %>%
     summarise(count=n())
 
-country_by_policy[country_by_policy$facial_coverings=="0", ]
+no_policy <- country_by_policy[country_by_policy$facial_coverings=="0", c(1,3)]
+recommended <- country_by_policy[country_by_policy$facial_coverings=="1", c(1,3)]
+
+no_mandatory <- left_join(no_policy, recommended, by = c("Entity" = "Entity"))
+no_mandatory[is.na(no_mandatory)] <- 0
+
+no_mandatory$NoMandatory <- no_mandatory[,2] + no_mandatory[,3]
+no_mandatory$NoMandatory <- no_mandatory$NoMandatory[,1]
+no_mandatory <- subset(no_mandatory, select = c(-count.x, -count.y))
+
+no_mandatory <- data.frame(no_mandatory)
+
+no_mandatory_plot <- ggplot(no_mandatory, aes(x=Entity, y= NoMandatory)) + 
+  geom_jitter() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Country") +
+  ylab("# of Days Facial Coverings Not Mandatory")
+
+no_mandatory_plot
 ```
 
 
