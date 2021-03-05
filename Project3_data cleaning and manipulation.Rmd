@@ -429,6 +429,156 @@ grid.arrange(Switzerland_facial_coverings, Thailand_facial_coverings, UnitedKing
 ```
 
 
+```{r}
+arima_function = function(covid_df, country_string, date_cutoff){
+  # getting covid data for India
+  india.df <- subset( covid, Country == country_string )[, c(1,5) ]
+  # fix colnames
+  colnames(india.df) <- c( "date", "case" )
+  # convert `date` to "Date" object
+  india.df$date <- as.Date( india.df$date )
+    
+  india.ts <- zoo(india.df$case,  india.df$date ) 
+  summary(india.ts)
+  print(plot(india.ts))
+  #policy.start.date <- as.Date( format("2020-04-01", format = "%Y-%m-%d") )
+  policy.start.date <- as.Date( format(date_cutoff, format = "%Y-%m-%d") )
+
+  
+  # length of days to forecast the number of new cases per day
+  forcast.length <-  sum(india.df$date <= policy.start.date)
+  
+  # length of days when face covering policy is in effect
+  # this serves the maximum possible length of dates to forecast
+  policy.length <- sum(india.df$date > policy.start.date)
+    # subset of data when no face covering
+  india.sub.df <- india.df[ india.df$date <= policy.start.date, ]
+  # convert to "zoo" object
+  india.sub.ts <- zoo(india.sub.df$case,  india.sub.df$date ) 
+  
+  # subset of data (of length forcast.length) immediate after policy change
+  india.real.df <- 
+    india.df[ india.df$date > policy.start.date & 
+                india.df$date <= (policy.start.date + forcast.length), ]
+  
+  # subset of data when face covering recommended/required
+  india.real.df2 <- india.df[ india.df$date > policy.start.date , ]
+  
+  
+  # ensuring stationary assumption by differencing the data
+  # stationary_data <- diff( india.sub.ts )
+  stationary_data <- diff ( diff( india.sub.ts ) )
+  print(plot( stationary_data ))
+  
+  # To check if it's stationary we conduct a quantitative test.
+  # We use the Augmented Dickey-Fuller Test.
+  
+  # H_0 = The null hypothesis for this test is that there is a unit root.
+  # H_A = The alternative hypothesis is that the time series is 
+  # stationary (or trend-stationary).
+  adf.test( as.matrix(stationary_data) ) 
+  
+  # We select a significance level of 0.05 and since our p-value is 0.01
+  # and smaller then 0.05, we come to the conclusion to reject the null
+  # hypothesis. In other words our data is stationary.
+  
+  # We use the Auto Correlation Graph
+  
+  # First we have a look at our acf graph when our data isn't stationary.
+  acf( india.sub.ts )
+  
+  # Here we see that our values are all exceeding the blue line. The goal 
+  # is to have the values under the blue line and they should be inverted 
+  # as well.
+  
+  # To select the p and q values we select the number before the first 
+  # inverted line.
+  acf( stationary_data )
+  pacf( stationary_data )
+  
+  # arima has a auto.arima function which gives us the ideal arima model 
+  # based on our data.
+  arima_funct <- auto.arima( india.sub.ts )
+  arima_funct
+  
+  
+  # the parameter d is 2 from the auto.arima, which means two diff()
+  # should be used to transform the `india.sub.ts`
+  
+  # lets use the auto.arima function to forecast the length of period of
+  # no face covering (for India it's 90 days)
+  
+  forecast1 <- forecast( arima_funct, h = length( india.sub.ts ) )
+  forecast1.df <- as.data.frame( forecast1 )
+  
+  # predicted additional cumulative cases over the next 90 days
+  pred_cum_cases <- 
+    c( round( sum( forecast1.df$`Lo 95` ), 0 ), 
+       round( sum( forecast1.df$`Point Forecast` ), 0),
+       round( sum( forecast1.df$`Hi 95` ),0 ) ) 
+  
+  pred_cum_cases
+  
+  # actual accumualted cases over the next 90 days
+  round( sum( india.real.df$case ), 0 )
+  
+  # quick-N-dirty way to plot things
+  # plot( forecast1, xaxt = "n" )
+  # axis(1, at = axTicks(1), labels = as.Date( axTicks(1) ),
+  #      cex.axis = 0.7, las = 2 )
+  
+  
+  quick_plot( forecast1, india.sub.df, india.real.df )
+
+  forecast2 <- forecast( object = arima_funct, h = policy.length )
+  forecast2.df <- as.data.frame( forecast2 )
+  
+  # predicted additional cumulative cases over the next 90 days
+  pred_cum_cases2 <- 
+    c( round( sum( forecast2.df$`Lo 95` ), 0 ), 
+       round( sum( forecast2.df$`Point Forecast` ), 0),
+       round( sum( forecast2.df$`Hi 95` ),0 ) ) 
+  
+  pred_cum_cases2
+  
+  # actual accumualted cases over the next 323 days
+  round( sum( india.real.df2$case ), 0 )
+  
+  quick_plot( forecast2, india.sub.df, india.real.df2 )
+}
+```
+
+
+
+
+
+```{r echo=TRUE, eval=TRUE}
+countries <- unique(joined_data$Country)
+last_date <- 0
+
+for(i in 1:length(countries)) {
+  last_date[i] <- (joined_data %>% filter(Country == countries[i]) %>% 
+                     filter(facial_coverings != "0" & facial_coverings !="1") %>% head(1))$Date_reported - 1
+  
+  
+}
+
+mask_policy <- zoo::as.Date(last_date)
+
+mask_required <- data.frame(countries, mask_policy)
+
+
+
+for(i in 1:3) {
+  arima_function(joined_data, mask_required[i,1], mask_required[i,2])
+  
+  
+}
+
+
+
+```
+
 
 
 

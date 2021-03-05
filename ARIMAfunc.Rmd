@@ -28,7 +28,7 @@ class(covid$`ï»¿Date_reported`)
 # A pretty way to plot things: DIY a plotting function
 quick_plot <- function( arima.obj, train.df, predict.df, country="India" ){
   
-  tt <- capture.output( print( arima_funct) )[2] # ARIMA model 
+  tt <- capture.output( print( arima.obj) )[2] # ARIMA model 
   
   forecast <- forecast( arima.obj, h = nrow( predict.df ) )
   
@@ -154,7 +154,7 @@ arima_function = function(covid_df, country_string, date_cutoff){
   #      cex.axis = 0.7, las = 2 )
   
   
-  quick_plot( forecast1, india.sub.df, india.real.df )
+  quick_plot( arima_funct, india.sub.df, india.real.df )
 
   forecast2 <- forecast( object = arima_funct, h = policy.length )
   forecast2.df <- as.data.frame( forecast2 )
@@ -170,7 +170,7 @@ arima_function = function(covid_df, country_string, date_cutoff){
   # actual accumualted cases over the next 323 days
   round( sum( india.real.df2$case ), 0 )
   
-  quick_plot( forecast2, india.sub.df, india.real.df2 )
+  quick_plot( arima_funct, india.sub.df, india.real.df2 )
 }
 ```
 
@@ -200,15 +200,15 @@ arima_function(merged_dataframe, "India", "2020-04-01")
 
 ```{r}
 countries <- unique(covid$Country)
-merged_dataframe$facial_coverings = as.character(merged_dataframe$facial_coverings)
+#merged_dataframe$facial_coverings = as.character(merged_dataframe$facial_coverings)
 
-head(merged_dataframe)
+#head(merged_dataframe)
 #countries
 
-test = merged_dataframe %>% filter(Country == countries[3]) %>% filter(facial_coverings != "0")
+test = joined_data %>% filter(Country == countries[3]) %>% filter(facial_coverings != "0")
 test[c(1)]
 
 for(i in 1:length(countries)) {
-  (merged_dataframe %>% filter(Country == countries[i]) %>% filter(as.character(facial_coverings) != "0") %>% head(1))$Date_reported - 1
+  (joined_data %>% filter(Country == countries[i]) %>% filter(as.character(facial_coverings) != "0") %>% head(1))$Date_reported - 1
 }
 ```
